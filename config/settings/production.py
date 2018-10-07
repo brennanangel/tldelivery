@@ -16,6 +16,7 @@ DATABASES['default']['CONN_MAX_AGE'] = env.int('CONN_MAX_AGE', default=60)  # no
 
 # CACHES
 # ------------------------------------------------------------------------------
+"""
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -28,6 +29,7 @@ CACHES = {
         }
     }
 }
+"""
 
 # SECURITY
 # ------------------------------------------------------------------------------
@@ -36,11 +38,11 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # https://docs.djangoproject.com/en/dev/ref/settings/#secure-ssl-redirect
 SECURE_SSL_REDIRECT = env.bool('DJANGO_SECURE_SSL_REDIRECT', default=True)
 # https://docs.djangoproject.com/en/dev/ref/settings/#session-cookie-secure
-SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = False # TODO: True when enable HTTPS
 # https://docs.djangoproject.com/en/dev/ref/settings/#session-cookie-httponly
 SESSION_COOKIE_HTTPONLY = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#csrf-cookie-secure
-CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = False # TODO: True when enable HTTPS
 # https://docs.djangoproject.com/en/dev/ref/settings/#csrf-cookie-httponly
 CSRF_COOKIE_HTTPONLY = True
 # https://docs.djangoproject.com/en/dev/topics/security/#ssl-https
@@ -63,9 +65,9 @@ X_FRAME_OPTIONS = 'DENY'
 # https://django-storages.readthedocs.io/en/latest/#installation
 INSTALLED_APPS += ['storages']  # noqa F405
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_ACCESS_KEY_ID = env('DJANGO_AWS_ACCESS_KEY_ID')
+AWS_ACCESS_KEY_ID = env('DJANGO_AWS_ACCESS_KEY_ID', default=None)
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_SECRET_ACCESS_KEY = env('DJANGO_AWS_SECRET_ACCESS_KEY')
+AWS_SECRET_ACCESS_KEY = env('DJANGO_AWS_SECRET_ACCESS_KEY', default=None)
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
 AWS_STORAGE_BUCKET_NAME = env('DJANGO_AWS_STORAGE_BUCKET_NAME')
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
@@ -114,11 +116,12 @@ EMAIL_SUBJECT_PREFIX = env('DJANGO_EMAIL_SUBJECT_PREFIX', default='[delivery]')
 # ADMIN
 # ------------------------------------------------------------------------------
 # Django Admin URL regex.
-ADMIN_URL = env('DJANGO_ADMIN_URL')
+# ADMIN_URL = env('DJANGO_ADMIN_URL')
 
 # Anymail (Mailgun)
 # ------------------------------------------------------------------------------
 # https://anymail.readthedocs.io/en/stable/installation/#installing-anymail
+"""
 INSTALLED_APPS += ['anymail']  # noqa F405
 EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
 # https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
@@ -126,6 +129,7 @@ ANYMAIL = {
     'MAILGUN_API_KEY': env('MAILGUN_API_KEY'),
     'MAILGUN_SENDER_DOMAIN': env('MAILGUN_DOMAIN')
 }
+"""
 
 # Gunicorn
 # ------------------------------------------------------------------------------

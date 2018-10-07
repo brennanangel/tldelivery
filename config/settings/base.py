@@ -9,7 +9,7 @@ APPS_DIR = ROOT_DIR.path('delivery')
 
 env = environ.Env()
 
-READ_DOT_ENV_FILE = env.bool('DJANGO_READ_DOT_ENV_FILE', default=False)
+READ_DOT_ENV_FILE = env.bool('DJANGO_READ_DOT_ENV_FILE', default=True)
 if READ_DOT_ENV_FILE:
     # OS environment variables take precedence over variables from .env
     env.read_env(str(ROOT_DIR.path('.env')))
@@ -22,7 +22,7 @@ DEBUG = env.bool('DJANGO_DEBUG', False)
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # though not all of them may be available with every OS.
 # In Windows, this must be set to your system time zone.
-TIME_ZONE = 'PST'
+TIME_ZONE = 'America/Los_Angeles'
 # https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = 'en-us'
 # https://docs.djangoproject.com/en/dev/ref/settings/#site-id
@@ -52,6 +52,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # APPS
 # ------------------------------------------------------------------------------
 DJANGO_APPS = [
+    # Django suit for admin UI
+    'suit',
+    # 'nested_admin',
+
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -63,9 +67,9 @@ DJANGO_APPS = [
 ]
 THIRD_PARTY_APPS = [
     'crispy_forms',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
+    # 'allauth',
+    # 'allauth.account',
+    # 'allauth.socialaccount',
     'rest_framework',
 ]
 LOCAL_APPS = [
@@ -232,8 +236,19 @@ ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_ADAPTER = 'delivery.users.adapters.AccountAdapter'
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
-SOCIALACCOUNT_ADAPTER = 'delivery.users.adapters.SocialAccountAdapter'
+# SOCIALACCOUNT_ADAPTER = 'delivery.users.adapters.SocialAccountAdapter'
 
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+SUIT_CONFIG = {
+    # 'SEARCH_URL': '/admin/main/item/',
+    'ADMIN_NAME': 'The Guardsmen Tree Lot Delivery Desk',
+    'SHOW_REQUIRED_ASTERISK': True,
+    'CONFIRM_UNSAVED_CHANGES': True,
+    'MENU_OPEN_FIRST_CHILD': True,
+    'MENU': (
+        'main',
+        '-',
+    )
+ }

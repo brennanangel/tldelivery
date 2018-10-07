@@ -1,1 +1,9 @@
-{% extends "base.html" %}
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div class="container-fluid">
+  <p class="lead">This site is for managing The Guardsmen Tree Lot delivery desk.</p>
+  <p class="lead">
+    <a class="btn btn-primary btn-lg" href={% url 'admin:index' %} role="button">Get started</a>
+  </p>
+</div>
+{% endblock content %}
