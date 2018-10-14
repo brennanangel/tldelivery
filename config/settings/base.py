@@ -74,6 +74,7 @@ THIRD_PARTY_APPS = [
 ]
 LOCAL_APPS = [
     'delivery.users.apps.UsersAppConfig',
+    'delivery.delivery.apps.DeliveryConfig',
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -240,9 +241,12 @@ ACCOUNT_ADAPTER = 'delivery.users.adapters.AccountAdapter'
 
 
 # Your stuff...
+CLOVER_API_KEY = env('CLOVER_API_KEY')
+CLOVER_MERCHANT_ID = env('CLOVER_MERCHANT_ID')
+CLOVER_INTEGRATION_API = env('CLOVER_INTEGRATION_API')
 # ------------------------------------------------------------------------------
 SUIT_CONFIG = {
-    # 'SEARCH_URL': '/admin/main/item/',
+    'SEARCH_URL': '/admin/delivery/delivery/',
     'ADMIN_NAME': 'The Guardsmen Tree Lot Delivery Desk',
     'SHOW_REQUIRED_ASTERISK': True,
     'CONFIRM_UNSAVED_CHANGES': True,
@@ -250,5 +254,7 @@ SUIT_CONFIG = {
     'MENU': (
         'main',
         '-',
+        'shift',
+        'delivery'
     )
- }
+}

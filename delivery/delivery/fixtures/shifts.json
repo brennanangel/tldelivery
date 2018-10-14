@@ -1,0 +1,507 @@
+[
+  {
+    "model": "delivery.shift",
+    "pk": 1,
+    "fields": {
+      "date": "2018-11-24",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "Opening Shift",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 2,
+    "fields": {
+      "date": "2018-11-24",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 3,
+    "fields": {
+      "date": "2018-11-25",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 4,
+    "fields": {
+      "date": "2018-11-25",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 5,
+    "fields": {
+      "date": "2018-11-26",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 6,
+    "fields": {
+      "date": "2018-11-26",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 7,
+    "fields": {
+      "date": "2018-11-27",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 8,
+    "fields": {
+      "date": "2018-11-27",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 9,
+    "fields": {
+      "date": "2018-11-28",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 10,
+    "fields": {
+      "date": "2018-11-28",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 11,
+    "fields": {
+      "date": "2018-11-29",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 12,
+    "fields": {
+      "date": "2018-11-29",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 13,
+    "fields": {
+      "date": "2018-11-30",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 14,
+    "fields": {
+      "date": "2018-11-30",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 15,
+    "fields": {
+      "date": "2018-12-01",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 16,
+    "fields": {
+      "date": "2018-12-01",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 17,
+    "fields": {
+      "date": "2018-12-02",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 18,
+    "fields": {
+      "date": "2018-12-02",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 19,
+    "fields": {
+      "date": "2018-12-03",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 20,
+    "fields": {
+      "date": "2018-12-03",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 21,
+    "fields": {
+      "date": "2018-12-04",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 22,
+    "fields": {
+      "date": "2018-12-04",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 23,
+    "fields": {
+      "date": "2018-12-05",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 24,
+    "fields": {
+      "date": "2018-12-05",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 25,
+    "fields": {
+      "date": "2018-12-06",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 26,
+    "fields": {
+      "date": "2018-12-06",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 27,
+    "fields": {
+      "date": "2018-12-07",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 28,
+    "fields": {
+      "date": "2018-12-07",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 29,
+    "fields": {
+      "date": "2018-12-08",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 30,
+    "fields": {
+      "date": "2018-12-08",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 31,
+    "fields": {
+      "date": "2018-12-09",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 32,
+    "fields": {
+      "date": "2018-12-09",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 33,
+    "fields": {
+      "date": "2018-12-10",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 34,
+    "fields": {
+      "date": "2018-12-10",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 35,
+    "fields": {
+      "date": "2018-12-11",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 36,
+    "fields": {
+      "date": "2018-12-11",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 37,
+    "fields": {
+      "date": "2018-12-12",
+      "time": "AM",
+      "slots_available": 0,
+      "comment": "CLOSED: Christmas Lunch",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 38,
+    "fields": {
+      "date": "2018-12-12",
+      "time": "PM",
+      "slots_available": 0,
+      "comment": "CLOSED: Christmas Lunch",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 39,
+    "fields": {
+      "date": "2018-12-13",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 40,
+    "fields": {
+      "date": "2018-12-13",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 41,
+    "fields": {
+      "date": "2018-12-14",
+      "time": "AM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  },
+  {
+    "model": "delivery.shift",
+    "pk": 42,
+    "fields": {
+      "date": "2018-12-14",
+      "time": "PM",
+      "slots_available": 20,
+      "comment": "",
+      "notes": ""
+    }
+  }
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
