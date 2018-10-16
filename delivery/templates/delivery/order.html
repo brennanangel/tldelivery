@@ -1,0 +1,47 @@
+{% load staticfiles i18n %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>{% block title %}{{object.order_number}} Item Sheet{% endblock title %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+    <link href="{% static 'css/project.css' %}" rel="stylesheet">
+    {% block css %}
+    <!-- Your stuff: Third-party CSS libraries go here -->
+    <!-- This file stores project-specific CSS -->
+    {% endblock %}
+  </head>
+
+  <body>
+    <h1 class="center">{{object.recipient_name}} - {{object.delivery_shift.date_display}}</h1>
+    <h2 class="center">{{object.order_number}}</h2>
+    <h3>Contact</h3>
+    <div>Phone Number: {{object.recipient_phone_number|default:"UNKNOWN"}}</div>
+    <div>Email: {{object.recipient_email|default:"UNKNOWN"}}</div>
+    <h3>Address</h3>
+    {% if object.address_name %}</div>{{object.address_name}}</div>{% endif %}
+    <div>{{object.address_line_1|default:"UNKNOWN"}}</div>
+    {% if object.address_line_2 %}<div>{{object.address_line_2}}</div>{% endif %}
+    <div>{{object.address_city|default:"UNKNOWN"}}, CA {{object.address_postal_code|default:"UNKNOWN"}}</div>
+    <h3>Items</h3>
+    <ul>
+        {% for item in object.item_set.all %}
+        <li><h4>{% if item.picked_up %}[ALREADY PICKED UP] {% endif %}{{item.item_name}}{% if item.quantity != 1 %} - {{item.quantity}}{% endif %}</h4>{% if item.note %}{{item.note}}{% endif %}</li>
+        {% endfor %}
+    </ul>
+    <h3>Notes</h3>
+    {{object.notes}}
+  </div>
+  </body>
+</html>
+
+
+

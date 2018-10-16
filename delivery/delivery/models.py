@@ -197,9 +197,12 @@ class Delivery(models.Model):
                 cid = item['id']
                 if cid in current_items:
                     continue
+                item_name = item['name']
+                if 'Shipping and Handling' in item_name or 'Delivery' in item_name:
+                    continue
                 self.item_set.create(
                     clover_id=cid,
-                    item_name=item['name'],
+                    item_name=item_name,
                     quantity=1,
                 )
 
@@ -257,6 +260,16 @@ class Delivery(models.Model):
             )
         )
     sync_button.short_description = 'Sync Order from Clover'
+    sync_button.allow_tags = True
+
+    def generate_delivery_sheet(self):
+        return mark_safe(
+            format_html(
+                '<a class="btn" href="{order_sheet}" target="_blank">Generate Delivery Sheet</a>&nbsp;',
+                order_sheet=reverse('order-sheet', args=[self.id]),
+            )
+        )
+    sync_button.short_description = 'Generate Delivery Sheet'
     sync_button.allow_tags = True
 
     def __str__(self):

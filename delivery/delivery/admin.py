@@ -1,5 +1,7 @@
 import datetime
 from django.contrib import admin, messages
+from django.urls import reverse
+
 from django.http import HttpResponseRedirect
 from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
 from django.forms import ModelForm
@@ -73,7 +75,9 @@ class DeliveryForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(DeliveryForm, self).__init__(*args, **kwargs)
-        self.fields['delivery_shift'].queryset = Shift.objects.filter(date__gte=datetime.date.today())
+        self.fields['delivery_shift'].queryset = Shift.objects.filter(
+            date__gte=datetime.date.today()
+        ).order_by('date', 'time')
 
 
 class DeliveryAdmin(admin.ModelAdmin):
@@ -82,20 +86,20 @@ class DeliveryAdmin(admin.ModelAdmin):
     list_filter = ('delivery_shift', )
     search_fields = ['order_number', 'recipient_last_name', 'recipient_phone_number']
     readonly_fields = (
-        'sync_button',
+        'sync_button', 'generate_delivery_sheet'
     )
     fieldsets = (
         ('Main', {
             'fields': ('order_number', 'delivery_shift')
         }),
         ('Actions', {
-            'fields': ('sync_button',)
+            'fields': ('sync_button', 'generate_delivery_sheet', )
         }),
         ('Recipient', {
             'fields': ('recipient_last_name', 'recipient_first_name', 'recipient_phone_number', 'recipient_email')
         }),
         ('Address', {
-            'fields': ('address_name', 'address_line_1', 'address_line_2', 'address_city','address_postal_code')
+            'fields': ('address_name', 'address_line_1', 'address_line_2', 'address_city', 'address_postal_code')
         }),
         ('Other', {
             'fields': ('notes', )
