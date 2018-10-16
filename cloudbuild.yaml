@@ -9,7 +9,7 @@ steps:
   - 'treelot-delivery-manager=us.gcr.io/$PROJECT_ID/treelot-delivery-manager:$COMMIT_SHA'
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-west1-a'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=treelot-delivery-manager'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=auction-manager'
 images:
 - 'us.gcr.io/$PROJECT_ID/treelot-delivery-manager:$COMMIT_SHA'
 - 'us.gcr.io/$PROJECT_ID/treelot-delivery-manager:latest'
