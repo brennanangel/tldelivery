@@ -241,6 +241,7 @@ ACCOUNT_ADAPTER = 'delivery.users.adapters.AccountAdapter'
 
 
 # Your stuff...
+APPLICATION_VERSION = env('APPLICATION_VERSION', default='unspecified')
 CLOVER_API_KEY = env('CLOVER_API_KEY')
 CLOVER_MERCHANT_ID = env('CLOVER_MERCHANT_ID')
 CLOVER_INTEGRATION_API = env('CLOVER_INTEGRATION_API')

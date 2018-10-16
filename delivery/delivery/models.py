@@ -263,6 +263,8 @@ class Delivery(models.Model):
     sync_button.allow_tags = True
 
     def generate_delivery_sheet(self):
+        if not self.id:
+            return '[save record first]'
         return mark_safe(
             format_html(
                 '<a class="btn" href="{order_sheet}" target="_blank">Generate Delivery Sheet</a>&nbsp;',
