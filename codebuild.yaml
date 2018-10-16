@@ -1,0 +1,16 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [ 'build', '-t', 'us.gcr.io/$PROJECT_ID/treelot-delivery-manager', '-t', 'us.gcr.io/$PROJECT_ID/treelot-delivery-manager:$COMMIT_SHA', '-f', './compose/production/django/Dockerfile', '.' ]
+- name: 'gcr.io/cloud-builders/kubectl'
+  args:
+  - 'set'
+  - 'image'
+  - 'deployment/treelot-delivery-manager'
+  - 'treelot-delivery-manager=us.gcr.io/$PROJECT_ID/treelot-delivery-manager:$COMMIT_SHA'
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=us-west1-a'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=treelot-delivery-manager'
+images:
+- 'us.gcr.io/$PROJECT_ID/treelot-delivery-manager:$COMMIT_SHA'
+- 'us.gcr.io/$PROJECT_ID/treelot-delivery-manager:latest'
+timeout: 3600s

@@ -19,5 +19,5 @@ djangorestframework==3.8.2  # https://github.com/encode/django-rest-framework
 coreapi==2.3.3  # https://github.com/core-api/python-client
 
 # Local
-django-suit==0.2.24
+django-suit==0.2.26
 
