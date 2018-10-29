@@ -245,6 +245,8 @@ APPLICATION_VERSION = env('APPLICATION_VERSION', default='unspecified')
 CLOVER_API_KEY = env('CLOVER_API_KEY')
 CLOVER_MERCHANT_ID = env('CLOVER_MERCHANT_ID')
 CLOVER_INTEGRATION_API = env('CLOVER_INTEGRATION_API')
+ONFLEET_API_KEY = env('ONFLEET_API_KEY')
+ONFLEET_INTEGRATION_API = env('ONFLEET_INTEGRATION_API')
 # ------------------------------------------------------------------------------
 SUIT_CONFIG = {
     'SEARCH_URL': '/admin/delivery/delivery/',
@@ -256,6 +258,8 @@ SUIT_CONFIG = {
         'main',
         '-',
         'shift',
-        'delivery'
+        'delivery',
+        '-',
+        {'label': 'trucks', 'url': '/delivery/trucks', 'blank': True},
     )
 }

@@ -21,8 +21,8 @@
   </head>
 
   <body>
-    <h1 class="center">{{object.recipient_name}} - {{object.delivery_shift.date_display}}</h1>
-    <h2 class="center">{{object.order_number}}</h2>
+    <h1 class="center">{{object.recipient_name|default:"Unknown Name"}} - {{object.delivery_shift.datetime_display}}</h1>
+    <h2 class="center">{{object.order_number|default:"No order number"}}</h2>
     <h3>Contact</h3>
     <div>Phone Number: {{object.recipient_phone_number|default:"UNKNOWN"}}</div>
     <div>Email: {{object.recipient_email|default:"UNKNOWN"}}</div>

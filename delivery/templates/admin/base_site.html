@@ -7,14 +7,8 @@
 
 
 {# Additional CSS includes #}
-{#{% block extrastyle %}#}
-{#  <link rel="stylesheet" type="text/css" href="{% static 'css/my_project.css' %}" media="all">#}
-{#{% endblock %}#}
-
-
-{# Additional JS files in footer, right before </body> #}
-{% block extrajs %}
-<script type="text/javascript" src="{% static 'js/project.js' %}"></script>
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/project.css' %}" media="all">
 {% endblock %}
 
 
@@ -54,4 +48,20 @@
 {# Footer copyright (right side) #}
 {% block copyright %}
   Copyright &copy; 2018<br><a href="http://guardsmen.org" target="_blank">The Guardsmen</a>
+{% endblock %}
+
+{# Additional JS files in footer, right before </body> #}
+{% block extrajs %}
+<div class="modal hide" tabindex="-1" role="dialog" id="progress-modal">
+  <div class="modal-dialog modal-sm progress-modal" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Modal title</h5>
+      </div>
+      <div class="modal-body">
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript" src="{% static 'js/project.js' %}"></script>
 {% endblock %}

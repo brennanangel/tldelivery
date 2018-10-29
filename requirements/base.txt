@@ -20,4 +20,4 @@ coreapi==2.3.3  # https://github.com/core-api/python-client
 
 # Local
 django-suit==0.2.26
-
+phonenumberslite==8.9.1

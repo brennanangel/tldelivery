@@ -14,6 +14,9 @@ from .models import (
     Delivery,
     Item,
 )
+from .actions import (
+    create_onfleet_task_from_order,
+)
 
 
 class IsAvailableFilter(admin.SimpleListFilter):
@@ -82,18 +85,18 @@ class DeliveryForm(ModelForm):
 
 class DeliveryAdmin(admin.ModelAdmin):
     form = DeliveryForm
-    list_display = ('order_number', 'delivery_shift', 'recipient_name', 'recipient_phone_number')
+    list_display = ('order_number', 'delivery_shift', 'recipient_name', 'recipient_phone_number', 'generate_delivery_sheet', 'push_button')
     list_filter = ('delivery_shift', )
     search_fields = ['order_number', 'recipient_last_name', 'recipient_phone_number']
     readonly_fields = (
-        'sync_button', 'generate_delivery_sheet'
+        'sync_button', 'generate_delivery_sheet', 'push_button',
     )
     fieldsets = (
         ('Main', {
             'fields': ('order_number', 'delivery_shift')
         }),
         ('Actions', {
-            'fields': ('sync_button', 'generate_delivery_sheet', )
+            'fields': ('sync_button', 'generate_delivery_sheet', 'push_button')
         }),
         ('Recipient', {
             'fields': ('recipient_last_name', 'recipient_first_name', 'recipient_phone_number', 'recipient_email')
@@ -142,9 +145,11 @@ class DeliveryAdmin(admin.ModelAdmin):
         if '_sync' in request.POST:
             obj.sync()
         super().save_model(request, obj, form, change)
+        if '_push' in request.POST:
+            create_onfleet_task_from_order(obj)
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
-        if '_sync' in request.POST:
+        if '_sync' in request.POST or '_push' in request.POST:
             try:
                 return super().change_view(request, object_id, form_url, extra_context)
             except Exception as exc:

@@ -1,7 +1,7 @@
 import datetime
 from os import path
 import requests
-
+import phonenumbers
 from django.db import models
 from django.utils.safestring import mark_safe
 from django.utils.html import format_html
@@ -38,8 +38,8 @@ class Shift(models.Model):
     @property
     def datetime_display(self):
         return "{date} {time}".format(
-            date = self.date_display,
-            time = self.time
+            date=self.date_display,
+            time=self.time
         )
     @property
     def slots_filled(self):
@@ -58,11 +58,26 @@ class Shift(models.Model):
     def available(self):
         return self.date >= datetime.date.today() and self.slots_remaining > 0
 
+    def push_button(self):
+        if not self.id:
+            return '[save record first]'
+        return mark_safe(
+            format_html(
+                '<button class="btn btn-primary onfleet-button" name="_push" data-id="{id}">Send to Onfleet</button>',
+                id=self.id,
+                order_number=self.order_number
+            )
+        )
+    push_button.short_description = 'Create task in OnFleet'
+    push_button.allow_tags = True
+
     def shift_actions(self):
         return mark_safe(
             format_html(
-                '<a class="btn" href="{walk}" target="_blank">Generate Walk List</a>&nbsp;',
+                '<a class="btn" href="{walk}" target="_blank">Generate Walk List</a>&nbsp;'
+                '<button class="btn onfleet-button shift" name="_push" data-id="{id}">Send to Onfleet</button>',
                 walk=reverse('walk-list', args=[self.id]),
+                id=self.id
             )
         )
     shift_actions.short_description = 'Shift Actions'
@@ -142,6 +157,10 @@ class Delivery(models.Model):
     )
 
     @property
+    def recipient_sort_name(self):
+        return self.recipient_last_name or 'zzUnknown'
+
+    @property
     def recipient_name(self):
         if self.recipient_first_name is None:
             return self.recipient_last_name
@@ -207,8 +226,8 @@ class Delivery(models.Model):
                 )
 
         # set customer information
-        if not order_data['customers'] or not order_data['customers']['elements']:
-            raise ValueError('No customer information returned from Clover.')
+        if not order_data.get('customers') or not order_data['customers']['elements']:
+            return
         customers = order_data['customers']['elements']
         if len(customers) != 1:
             raise ValueError('Unexpected number ({}) of customers found on order'.format(len(customers)))
@@ -251,16 +270,83 @@ class Delivery(models.Model):
                     email = customer_data['emailAddresses']['elements'][0]
                 self.recipient_email = email['emailAddress']
 
+    def serialize_for_onfleet(self):
+        notes = "Order Number: {}\nItems:".format(self.order_number)
+        if self.item_set.count() < 1:
+            notes += "\n    No Items Found"
+        else:
+            for item in self.item_set.all():
+                notes += "\n - {item_display}{item_notes}".format(
+                    item_display=item.display,
+                    item_notes=' ({})'.format(item.note) if item.note else ''
+                )
+        if self.notes:
+            notes += "\n\n{}".format(self.notes)
+        return {
+            'metadata': [{
+                "name": "order_number",
+                "type": "string",
+                "value": self.order_number,
+                "visibility": [
+                    "api",
+                    "dashboard",
+                ]
+            }] if self.order_number else None,
+            'destination': {
+                'address': {
+                    'unparsed': ', '.join(filter(None, [
+                        self.address_line_1,
+                        self.address_line_2,
+                        self.address_city,
+                        'San Francisco',
+                        'CA',
+                        self.address_postal_code,
+                    ])),
+                },
+                'notes': self.address_name,
+            },
+            'recipients': [{
+                'name': self.recipient_name,
+                'phone': phonenumbers.format_number(
+                    phonenumbers.parse(self.recipient_phone_number, 'US'),
+                    phonenumbers.PhoneNumberFormat.E164
+                ) if self.recipient_phone_number else None
+            }],
+            'completeAfter': datetime.datetime.combine(
+                datetime.date(2018, 10, 1),
+                datetime.time(13 if self.delivery_shift.time == 'PM' else 9)
+                ).timestamp() * 1000,
+            'completeBefore': datetime.datetime.combine(
+                self.delivery_shift.date,
+                datetime.time(18 if self.delivery_shift.time == 'PM' else 12)
+                ).timestamp() * 1000,
+            'notes': notes,
+            'quantity': 1,
+            'serviceTime': 15
+        }
 
     def sync_button(self):
         return mark_safe(
             format_html(
-                '<button class="btn btn-primary sync-button" name="_sync" data-order-id="{order_number}">Sync</button>',
+                '<button class="btn btn-primary sync-button" name="_sync" data-order-id="{order_number}">Sync with Clover</button>',
                 order_number=self.order_number
             )
         )
     sync_button.short_description = 'Sync Order from Clover'
     sync_button.allow_tags = True
+
+    def push_button(self):
+        if not self.id:
+            return '[save record first]'
+        return mark_safe(
+            format_html(
+                '<button class="btn btn-primary onfleet-button order" name="_push" data-id="{id}">Send to Onfleet</button>',
+                id=self.id,
+                order_number=self.order_number
+            )
+        )
+    push_button.short_description = 'Create task in OnFleet'
+    push_button.allow_tags = True
 
     def generate_delivery_sheet(self):
         if not self.id:
@@ -271,8 +357,8 @@ class Delivery(models.Model):
                 order_sheet=reverse('order-sheet', args=[self.id]),
             )
         )
-    sync_button.short_description = 'Generate Delivery Sheet'
-    sync_button.allow_tags = True
+    generate_delivery_sheet.short_description = 'Generate delivery sheet'
+    generate_delivery_sheet.allow_tags = True
 
     def __str__(self):
         return "{name} ({order_number})".format(
@@ -308,3 +394,12 @@ class Item(models.Model):
         max_length=40,
     )
 
+    @property
+    def display(self):
+        ret = ''
+        if self.picked_up:
+            ret += '[ALREADY PICKED UP] '
+        ret += self.item_name
+        if self.quantity != 1:
+            ret += ' - {}'.format(self.quantity)
+        return ret

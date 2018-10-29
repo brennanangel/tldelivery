@@ -22,11 +22,11 @@
 
   <body>
     <h1 class="center">{{object.datetime_display}} ({{object.delivery_set.count}} deliveries)</h1>
-    {% for delivery in object.delivery_set.all|dictsort:"recipient_last_name" %}
-      <h3>{{delivery.recipient_name}} ({{delivery.order_number}})</h3>
+    {% for delivery in object.delivery_set.all|dictsort:"recipient_sort_name" %}
+      <h3>{{delivery.recipient_name|default:"zzUNKNOWN"}} ({{delivery.order_number|default:"No order number"}})</h3>
       <ul>
           {% for item in delivery.item_set.all %}
-          <li><h4>{% if item.picked_up %}[ALREADY PICKED UP] {% endif %}{{item.item_name}}{% if item.quantity != 1 %} - {{item.quantity}}{% endif %}</h4>{% if item.note %}{{item.note}}{% endif %}</li>
+          <li><h4>{{ item.display }}</h4>{% if item.note %}{{item.note}}{% endif %}</li>
           {% endfor %}
       </ul>
     {% endfor %}
