@@ -1,8 +1,9 @@
 import datetime
+import csv
 from django.contrib import admin, messages
 from django.urls import reverse
 
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
 from django.forms import ModelForm
 from django.contrib.admin.utils import (
@@ -17,6 +18,21 @@ from .models import (
 from .actions import (
     create_onfleet_task_from_order,
 )
+
+def export_as_csv(self, request, queryset):
+    meta = self.model._meta
+    field_names = [field.name for field in meta.fields]
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename={}.csv'.format(meta)
+    writer = csv.writer(response)
+
+    writer.writerow(field_names)
+    for obj in queryset:
+        row = writer.writerow([getattr(obj, field) for field in field_names])
+
+    return response
+export_as_csv.short_description = "Export Selected"
 
 
 class IsAvailableFilter(admin.SimpleListFilter):
@@ -58,6 +74,7 @@ class ShiftAdmin(admin.ModelAdmin):
     list_display = ('shift', 'available', 'slots', 'comment', 'shift_actions')
     list_filter = (IsAvailableFilter, )
     ordering = ('date', 'time', )
+    actions = [export_as_csv]
 
 
     inlines = [
@@ -108,6 +125,7 @@ class DeliveryAdmin(admin.ModelAdmin):
             'fields': ('notes', )
         })
     )
+    actions = [export_as_csv]
     inlines = [
         ItemInline
     ]

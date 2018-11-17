@@ -206,23 +206,31 @@ class Delivery(models.Model):
 
         order_data = order_response.json()
 
+        self.notes = order_data.get('note', self.notes)
+
         # line items
         if order_data['lineItems'] and order_data['lineItems']['elements'] and len(order_data['lineItems']['elements']):
             items = order_data['lineItems']['elements']
-            current_items = [i.clover_id for i in self.item_set.all()]
+            current_items = [i.item_name for i in self.item_set.all()]
+            item_dict = {}
             for item in items:
                 if item['refunded']:
                     continue
-                cid = item['id']
-                if cid in current_items:
-                    continue
                 item_name = item['name']
+                if item_name in current_items:
+                    continue
                 if 'Shipping and Handling' in item_name or 'Delivery' in item_name:
                     continue
+                item_dict[item_name] = item_dict.get(item_name, 0) + 1
+            for item in items:
+                item_name = item['name']
+                quantity = item_dict.pop(item_name, 0)
+                if quantity <= 0:
+                    continue
                 self.item_set.create(
-                    clover_id=cid,
+                    clover_id=item['id'],
                     item_name=item_name,
-                    quantity=1,
+                    quantity=quantity,
                 )
 
         # set customer information
@@ -232,8 +240,8 @@ class Delivery(models.Model):
         if len(customers) != 1:
             raise ValueError('Unexpected number ({}) of customers found on order'.format(len(customers)))
         customer = customers[0]
-        self.recipient_last_name = customer['lastName']
-        self.recipient_first_name = customer['firstName']
+        self.recipient_last_name = customer.get('lastName')
+        self.recipient_first_name = customer.get('firstName')
         if customer['href']:
             customer_response = requests.get(customer['href'], params=customer_params, headers=headers)
             if customer_response.status_code != 200:
