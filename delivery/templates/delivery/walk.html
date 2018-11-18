@@ -29,6 +29,11 @@
           <li><h4>{{ item.display }}</h4>{% if item.note %}{{item.note}}{% endif %}</li>
           {% endfor %}
       </ul>
+      {% if delivery.notes %}
+      <ul>
+        <i>{{ delivery.notes }}</i>
+      </ul>
+      {% endif %}
     {% endfor %}
   </div>
   </body>
