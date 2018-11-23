@@ -22,12 +22,12 @@
 
   <body>
     {% for teamid, team in teams.items %}
-    <div class="team page">
-      <h1 class="center"><ul>{{ team.name }}</ul></h1>
+    <div class="team">
+      <h1 class="center no-print"><ul>{{ team.name }}</ul></h1>
       {% for truckid in team.workers %}
         {% with workers|lookup:truckid as truck %}
           {% if truck %}
-          <div class="truck">
+          <div class="truck page">
             <h2>{{ truck.name }}</h2>
             {% for taskid in truck.tasks %}
               {% with tasks|lookup:taskid as delivery %}

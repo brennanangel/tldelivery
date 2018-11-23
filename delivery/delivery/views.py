@@ -55,6 +55,8 @@ def OnfleetTruckView(request):
     except Exception as exc:
         traceback.print_exc()
         return HttpResponse(str(exc), status=500)
+    if tasks is None or not len(tasks):
+        return HttpResponse('No deliveries found.')
     return render(request, 'delivery/trucks.html', {
         'teams': teams,
         'workers': workers,

@@ -37,5 +37,13 @@
 }
 
 .page {
-  page-break-before: always;
+  page-break-after: always;
+}
+
+@media print
+{
+    .no-print, .no-print *
+    {
+        display: none !important;
+    }
 }
