@@ -1,5 +1,6 @@
 import datetime
 from os import path
+import pytz
 import requests
 import phonenumbers
 from django.db import models
@@ -255,8 +256,8 @@ class Delivery(models.Model):
                     address = next(a for a in customer_data['addresses']['elements'] if a['address1'])
                 except StopIteration:
                     address = customer_data['addresses']['elements'][0]
-                self.address_line_1 = address['address1']
-                self.address_line_2 = address['address2']
+                self.address_line_1 = address.get('address1')
+                self.address_line_2 = address.get('address2')
                 self.address_city = address['city']
                 self.address_postal_code = address['zip']
             if customer_data['phoneNumbers'] and\
@@ -322,11 +323,11 @@ class Delivery(models.Model):
             }],
             'completeAfter': datetime.datetime.combine(
                 min(self.delivery_shift.date, datetime.date.today()),
-                datetime.time(13 if self.delivery_shift.time == 'PM' else 9)
+                datetime.time(13 if self.delivery_shift.time == 'PM' else 9, tzinfo=pytz.timezone('America/Los_Angeles'))
                 ).timestamp() * 1000,
             'completeBefore': datetime.datetime.combine(
                 self.delivery_shift.date,
-                datetime.time(18 if self.delivery_shift.time == 'PM' else 12)
+                datetime.time(18 if self.delivery_shift.time == 'PM' else 12, tzinfo=pytz.timezone('America/Los_Angeles'))
                 ).timestamp() * 1000,
             'notes': notes,
             'quantity': 1,
