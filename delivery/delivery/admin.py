@@ -104,7 +104,7 @@ class DeliveryAdmin(admin.ModelAdmin):
     form = DeliveryForm
     list_display = ('order_number', 'delivery_shift', 'recipient_name', 'recipient_phone_number', 'generate_delivery_sheet', 'push_button')
     list_filter = ('delivery_shift', )
-    search_fields = ['order_number', 'recipient_last_name', 'recipient_phone_number']
+    search_fields = ['order_number', 'recipient_last_name', 'recipient_phone_number', 'recipient_first_name']
     readonly_fields = (
         'sync_button', 'generate_delivery_sheet', 'push_button',
     )
