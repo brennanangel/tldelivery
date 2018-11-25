@@ -13,8 +13,13 @@ def create_onfleet_task_from_order(obj):
         auth=requests.auth.HTTPBasicAuth(settings.ONFLEET_API_KEY, None),
         data=json.dumps(obj.serialize_for_onfleet())
     )
-    response.raise_for_status()
-    # task_data = response.json()
+    if response.status_code != 200:
+        try:
+            data = response.json()
+            message = json.dumps(data['message'])
+        except Exception:
+            response.raise_for_status()
+        raise Exception(message)
 
 
 def create_onfleet_tasks_from_shift(obj):
@@ -29,6 +34,22 @@ def create_onfleet_tasks_from_shift(obj):
             })
     )
     response.raise_for_status()
+    data = response.json()
+    created = data.get('tasks')
+    if tasks is None or not len(created):
+        raise Exception('No tasks created.')
+    num_created = len(created)
+    if num_created == len(tasks):
+        return
+    orders = [t.get('metadata') for t in created]
+    orders = [item for sublist in orders for item in sublist]
+    orders = [o['value'] for o in orders if o['name'] == 'order_number']
+    raise Exception('{nc} of {ns} orders created. Missing: {missing}'.format(
+        nc=num_created,
+        ns=len(tasks),
+        missing=[t.order_number for t in tasks if t.order_number not in orders]
+    ))
+
 
 def get_onfleet_trucks():
     response = requests.get(

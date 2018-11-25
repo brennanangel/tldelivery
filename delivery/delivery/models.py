@@ -316,12 +316,12 @@ class Delivery(models.Model):
             'recipients': [{
                 'name': self.recipient_name,
                 'phone': phonenumbers.format_number(
-                    phonenumbers.parse(self.recipient_phone_number, 'US'),
+                    phonenumbers.parse((self.recipient_phone_number or '2222222222'), 'US'),
                     phonenumbers.PhoneNumberFormat.E164
-                ) if self.recipient_phone_number else None
+                )
             }],
             'completeAfter': datetime.datetime.combine(
-                datetime.date(2018, 10, 1),
+                min(self.delivery_shift.date, datetime.date.today()),
                 datetime.time(13 if self.delivery_shift.time == 'PM' else 9)
                 ).timestamp() * 1000,
             'completeBefore': datetime.datetime.combine(
