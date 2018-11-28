@@ -40,11 +40,16 @@
                         <li><h4>{{ item.display }}</h4>{% if item.note %}{{item.note}}{% endif %}</li>
                         {% endfor %}
                     </ul>
-                    {% else %}
-                      <h3>{{delivery.recipients.0.name|default:"UNKNOWN"}} (No order listed)</h3>
+                      {% if delivery.order.notes and delivery.order.notes != delivery.order.recipient_first_name %}
                       <ul>
-                        <li>{{ delivery.notes }}</li>
+                        <i>{{ delivery.order.notes }}</i>
                       </ul>
+                      {% endif %}
+                    {% else %}
+                    <h3>{{delivery.recipients.0.name|default:"UNKNOWN"}} (No order listed)</h3>
+                    <ul>
+                      <li>{{ delivery.notes }}</li>
+                    </ul>
                     {% endif %}
                   </div>
                 {% endif %}

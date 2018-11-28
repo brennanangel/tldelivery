@@ -29,7 +29,7 @@
           <li><h4>{{ item.display }}</h4>{% if item.note %}{{item.note}}{% endif %}</li>
           {% endfor %}
       </ul>
-      {% if delivery.notes %}
+      {% if delivery.notes and delivery.notes != delivery.recipient_first_name %}
       <ul>
         <i>{{ delivery.notes }}</i>
       </ul>
