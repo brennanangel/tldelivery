@@ -124,6 +124,6 @@ def search_clover_orders(date, include_processed=False):
         scheduled_delivery_order_numbers = list((x.clover_id for x in scheduled_deliveries))
         delivery_orders = [o for o in delivery_orders if o["id"] not in scheduled_delivery_order_numbers]
 
-    return {
-        o['createdTime']: Delivery.create_from_clover(o, skip_items=True) for o in delivery_orders
-    }
+    return [
+       Delivery.create_from_clover(o, skip_items=True) for o in delivery_orders
+    ]

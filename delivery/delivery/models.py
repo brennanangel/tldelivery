@@ -103,6 +103,8 @@ class Delivery(models.Model):
     address_city = models.CharField(blank=True, null=True, max_length=40,)
     address_postal_code = models.CharField(blank=True, null=True, max_length=10,)
     notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def recipient_sort_name(self):
@@ -116,6 +118,14 @@ class Delivery(models.Model):
             return self.recipient_first_name + " [LAST NAME UNKNOWN]"
         return self.recipient_first_name + " " + self.recipient_last_name
 
+    @property
+    def recipient_phone_number_formatted(self):
+        if not self.recipient_phone_number:
+            return None
+        return phonenumbers.format_number(
+                phonenumbers.parse(self.recipient_phone_number, "US"),
+                phonenumbers.PhoneNumberFormat.E164,
+            )
 
     def _load_clover_items(self, order_data):
         if not order_data.get("lineItems", None):
@@ -209,6 +219,8 @@ class Delivery(models.Model):
 
     def load_from_clover(self, order_data, skip_items=False):
         self.notes = order_data.get("note", self.notes)
+        clover_created_time = order_data.get('createdTime', None)
+        self.created_at = clover_created_time / 1000 if clover_created_time else None
         if not skip_items:
             self._load_clover_items(order_data)
         self._load_clover_customer(order_data)
@@ -281,12 +293,7 @@ class Delivery(models.Model):
             "recipients": [
                 {
                     "name": self.recipient_name,
-                    "phone": phonenumbers.format_number(
-                        phonenumbers.parse(self.recipient_phone_number, "US"),
-                        phonenumbers.PhoneNumberFormat.E164,
-                    )
-                    if self.recipient_phone_number
-                    else None,
+                    "phone": self.recipient_phone_number_formatted,
                 }
             ],
             "completeAfter": datetime.datetime.combine(
