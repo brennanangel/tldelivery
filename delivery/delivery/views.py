@@ -7,6 +7,8 @@ from django.http import HttpResponse, HttpResponseNotFound
 from django.views.decorators.http import require_POST
 from django.shortcuts import render
 from django.template.defaulttags import register
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 
 from .models import Shift, Delivery
 from .actions import (
@@ -20,15 +22,16 @@ from .actions import (
 def lookup(d, key):
     return d.get(key)
 
-class WalkDetailView(DetailView):
+class WalkDetailView(LoginRequiredMixin, DetailView):
     template_name = 'delivery/walk.html'
     model = Shift
 
-class OrderDetailView(DetailView):
+class OrderDetailView(LoginRequiredMixin, DetailView):
     template_name = 'delivery/order.html'
     model = Delivery
 
 @require_POST
+@login_required
 def CreateOnfleetOrderView(request, pk):
     try:
         order = Delivery.objects.get(pk=pk)
@@ -41,6 +44,7 @@ def CreateOnfleetOrderView(request, pk):
     return HttpResponse(status=200)
 
 @require_POST
+@login_required
 def CreateOnfleetShiftView(request, pk):
     try:
         shift = Shift.objects.get(pk=pk)
@@ -52,6 +56,7 @@ def CreateOnfleetShiftView(request, pk):
         return HttpResponse(str(exc), status=500)
     return HttpResponse(status=200)
 
+@login_required
 def OnfleetTruckView(request):
     try:
         teams, workers, tasks = get_onfleet_trucks()
@@ -66,7 +71,7 @@ def OnfleetTruckView(request):
         'tasks': tasks,
     })
 
-class NewOrderView(ListView):
+class NewOrderView(LoginRequiredMixin, ListView):
     model = Delivery
     template_name = 'delivery/new_order_list.html'
 
