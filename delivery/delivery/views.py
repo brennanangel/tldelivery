@@ -80,5 +80,4 @@ class NewOrderView(LoginRequiredMixin, ListView):
             'object_list': search_clover_orders(datetime.date.today()),
             'is_paginated': False,
         }
-        print(context)
         return context

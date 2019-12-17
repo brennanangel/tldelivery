@@ -10,7 +10,6 @@ def request_clover(url, params):
         "Content-Type": "Application/JSON",
         "Authorization": "Bearer " + settings.CLOVER_API_KEY,
     }
-    print(params)
     return requests.get(url, params=params, headers=headers,)
 
 
