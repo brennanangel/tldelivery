@@ -34,7 +34,7 @@
                 {% if delivery %}
                   <div class="delivery">
                     {% if delivery.order %}
-                    <h3>{{delivery.order.recipient_name|default:"zzUNKNOWN"}} ({{delivery.order.order_number|default:"No order number"}}) - {{delivery.order.recipient_phone_number|default:"No phone number"}}</h3>
+                    <h3>{{delivery.order.recipient_name|default:"zzUNKNOWN"}} ({{delivery.order.order_number|default:"No order number"}}) - {{delivery.order.recipient_phone_number_formatted|default:"No phone number"}}</h3>
                     <ul>
                         {% for item in delivery.order.item_set.all %}
                         <li><h4>{{ item.display }}</h4>{% if item.note %}{{item.note}}{% endif %}</li>
