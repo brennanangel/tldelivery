@@ -71,13 +71,9 @@ def OnfleetTruckView(request):
         'tasks': tasks,
     })
 
-class NewOrderView(LoginRequiredMixin, ListView):
-    model = Delivery
-    template_name = 'delivery/new_order_list.html'
-
-    def get_context_data(self, **kwargs):
-        context = {
-            'object_list': search_clover_orders(datetime.date.today()),
-            'is_paginated': False,
-        }
-        return context
+@login_required
+def NewOrderView(request):
+    orders = search_clover_orders(datetime.date.today())
+    return render(request, 'delivery/new_order_list.html', {
+        'orders': orders
+    })
