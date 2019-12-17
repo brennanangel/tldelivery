@@ -1,6 +1,8 @@
 # from django.shortcuts import render
 import traceback
+import datetime
 from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
 from django.http import HttpResponse, HttpResponseNotFound
 from django.views.decorators.http import require_POST
 from django.shortcuts import render
@@ -11,6 +13,7 @@ from .actions import (
     create_onfleet_task_from_order,
     create_onfleet_tasks_from_shift,
     get_onfleet_trucks,
+    search_clover_orders
 )
 
 @register.filter(name='lookup')
@@ -62,3 +65,15 @@ def OnfleetTruckView(request):
         'workers': workers,
         'tasks': tasks,
     })
+
+class NewOrderView(ListView):
+    model = Delivery
+    template_name = 'delivery/new_order_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = {
+            'object_list': search_clover_orders(datetime.date.today()),
+            'is_paginated': False,
+        }
+        print(context)
+        return context
