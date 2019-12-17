@@ -371,6 +371,7 @@ class Item(models.Model):
     picked_up = models.BooleanField(default=False)
     note = models.CharField(null=True, blank=True, max_length=255)
     clover_id = models.CharField(null=True, blank=True, max_length=40,)
+    is_pulled = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.item_name} ({self.quantity})"
