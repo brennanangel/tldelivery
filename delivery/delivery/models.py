@@ -5,7 +5,11 @@ from django.db import models
 from django.utils.safestring import mark_safe
 from django.utils.html import format_html
 from django.urls import reverse
-from delivery.delivery.clover import request_clover_orders, request_clover, is_clover_delivery_item
+from delivery.delivery.clover import (
+    request_clover_orders,
+    request_clover,
+    is_clover_delivery_item,
+)
 
 # Create your models here.
 
@@ -123,14 +127,13 @@ class Delivery(models.Model):
         if not self.recipient_phone_number:
             return None
         return phonenumbers.format_number(
-                phonenumbers.parse(self.recipient_phone_number, "US"),
-                phonenumbers.PhoneNumberFormat.E164,
-            )
+            phonenumbers.parse(self.recipient_phone_number, "US"),
+            phonenumbers.PhoneNumberFormat.E164,
+        )
 
     def _load_clover_items(self, order_data):
         if not order_data.get("lineItems", None):
             return
-        print(order_data['lineItems'])
         if not order_data["lineItems"].get("elements", None):
             return
         items = order_data["lineItems"]["elements"]
@@ -155,7 +158,9 @@ class Delivery(models.Model):
             )
 
     def _load_clover_customer(self, order_data):
-        if not order_data.get("customers", None) or not order_data["customers"].get("elements", None):
+        if not order_data.get("customers", None) or not order_data["customers"].get(
+            "elements", None
+        ):
             return
         customers = order_data["customers"]["elements"]
         if len(customers) != 1:
@@ -171,8 +176,12 @@ class Delivery(models.Model):
             if customer_response.status_code != 200:
                 customer_response.raise_for_status()
             customer_data = customer_response.json()
-            self.recipient_last_name = self.recipient_last_name or customer_data.get("lastName", None)
-            self.recipient_first_name = self.recipient_first_name or customer_data.get("firstName", None)
+            self.recipient_last_name = self.recipient_last_name or customer_data.get(
+                "lastName", None
+            )
+            self.recipient_first_name = self.recipient_first_name or customer_data.get(
+                "firstName", None
+            )
             if customer_data["addresses"] and customer_data["addresses"]["elements"]:
                 try:
                     # first look for best address
@@ -216,25 +225,26 @@ class Delivery(models.Model):
                     email = customer_data["emailAddresses"]["elements"][0]
                 self.recipient_email = email["emailAddress"]
 
-
     def load_from_clover(self, order_data, skip_items=False):
         self.notes = order_data.get("note", self.notes)
-        clover_created_time = order_data.get('createdTime', None)
-        self.created_at = clover_created_time / 1000 if clover_created_time else None
+        clover_created_time = order_data.get("createdTime", None)
+        self.created_at = (
+            datetime.datetime.fromtimestamp(clover_created_time / 1000)
+            if clover_created_time
+            else None
+        )
         if not skip_items:
             self._load_clover_items(order_data)
         self._load_clover_customer(order_data)
 
-
     @classmethod
     def create_from_clover(cls, order_data, skip_items=False):
-        order_number = order_data['id']
+        order_number = order_data["id"]
         if not order_number:
             raise ValueError("No order number found in payload")
         d = cls(order_number=order_number)
         d.load_from_clover(order_data, skip_items=skip_items)
         return d
-
 
     def sync(self):
         if not self.order_number:
@@ -247,7 +257,6 @@ class Delivery(models.Model):
             self.save()
 
         self.load_from_clover(order_data)
-
 
     def serialize_for_onfleet(self):
         notes = "Order Number: {}\nItems:".format(self.order_number)

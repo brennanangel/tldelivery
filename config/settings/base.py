@@ -261,5 +261,6 @@ SUIT_CONFIG = {
         'delivery',
         '-',
         {'label': 'trucks', 'url': '/delivery/trucks', 'blank': True},
+        {'label': 'orders', 'url': '/delivery/orders/new', 'blank': False},
     )
 }

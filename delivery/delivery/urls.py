@@ -6,7 +6,7 @@ from .views import (
     CreateOnfleetOrderView,
     CreateOnfleetShiftView,
     OnfleetTruckView,
-    NewOrderView
+    NewOrderView,
 )
 
 urlpatterns = [
