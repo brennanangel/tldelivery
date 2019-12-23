@@ -284,5 +284,3 @@ tags
 delivery/media/
 
 .pytest_cache/
-.env
-.envs/*
