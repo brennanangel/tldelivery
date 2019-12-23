@@ -154,7 +154,7 @@ class Delivery(models.Model):
             if quantity <= 0:
                 continue
             self.item_set.create(
-                clover_id=item["id"], item_name=item_name, quantity=quantity,
+                clover_id=item["id"], item_name=item_name, quantity=quantity, is_pulled=True
             )
 
     def _load_clover_customer(self, order_data):
