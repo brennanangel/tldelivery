@@ -3,10 +3,12 @@ import csv
 from django.contrib import admin, messages
 from django.urls import reverse
 
+from django.core.cache import cache
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
 from django.forms import ModelForm
 from django.contrib.admin.utils import quote
+from django.db.models import Count
 
 from .models import (
     Shift,
@@ -44,7 +46,6 @@ class IsAvailableFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         value = self.value()
         if value == "Yes":
-            # queryset = queryset.annotate(slots_filled=Count('delivery'))
             return queryset.filter(date__gte=datetime.date.today())
 
         return queryset
@@ -95,9 +96,13 @@ class DeliveryForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(DeliveryForm, self).__init__(*args, **kwargs)
-        self.fields["delivery_shift"].queryset = Shift.objects.filter(
-            date__gte=datetime.date.today()
-        ).order_by("date", "time")
+        qs = Shift.objects.filter(date__gte=datetime.date.today())
+        if "instance" in kwargs and getattr(
+            kwargs["instance"], "delivery_shift_id", None
+        ):
+            qs = qs.union(Shift.objects.filter(pk=kwargs["instance"].delivery_shift_id))
+
+        self.fields["delivery_shift"].queryset = qs.order_by("date", "time")
 
 
 class DeliveryAdmin(admin.ModelAdmin):
@@ -122,7 +127,7 @@ class DeliveryAdmin(admin.ModelAdmin):
         "generate_delivery_sheet",
         "push_button",
     )
-    list_editable = ('delivery_shift',)
+    list_editable = ("delivery_shift",)
     fieldsets = (
         ("Main", {"fields": ("order_number", "delivery_shift")}),
         (
@@ -225,6 +230,25 @@ class DeliveryAdmin(admin.ModelAdmin):
                 )
                 return HttpResponseRedirect(redirect_url)
         return super().add_view(request, form_url, extra_context)
+
+    def get_queryset(self, request):
+        shift_counts = Delivery.objects.values("delivery_shift_id").annotate(
+            Count("delivery_shift_id")
+        )
+        for shift_count in shift_counts:
+            cache.set(
+                Shift.FILLED_CACHE_TEMPLATE.format(id=shift_count["delivery_shift_id"]),
+                shift_count["delivery_shift_id__count"],
+            )
+
+        return super().get_queryset(request)
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == "delivery_shift":
+            # dirty trick so queryset is evaluated and cached in .choices
+            formfield.choices = formfield.choices
+        return formfield
 
 
 admin.site.register(Shift, ShiftAdmin)

@@ -2,6 +2,7 @@ import datetime
 import pytz
 import phonenumbers
 from django.db import models
+from django.core.cache import cache
 from django.utils.safestring import mark_safe
 from django.utils.html import format_html
 from django.urls import reverse
@@ -15,6 +16,7 @@ from delivery.delivery.clover import (
 
 
 class Shift(models.Model):
+    FILLED_CACHE_TEMPLATE = "shift_{id}_count_filled"
     date = models.DateField()
     time = models.CharField(
         choices=(("AM", "AM"), ("PM", "PM"), ("SP", "Special")), max_length=2,
@@ -33,7 +35,9 @@ class Shift(models.Model):
 
     @property
     def slots_filled(self):
-        return self.delivery_set.count()
+        if self.id is None:
+            return None
+        return cache.get_or_set(self.FILLED_CACHE_TEMPLATE.format(id=self.id), self.delivery_set.count)
 
     @property
     def slots_remaining(self):
@@ -229,7 +233,7 @@ class Delivery(models.Model):
         self.notes = order_data.get("note", self.notes)
         clover_created_time = order_data.get("createdTime", None)
         self.created_at = (
-            datetime.datetime.fromtimestamp(clover_created_time / 1000)
+            datetime.datetime.fromtimestamp(clover_created_time / 1000, tz=pytz.UTC)
             if clover_created_time
             else None
         )
