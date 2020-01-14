@@ -90,26 +90,29 @@ def get_onfleet_trucks():
     return (teams, workers, tasks)
 
 
-def search_clover_orders(date, include_processed=False):
-    if date:
-        start_time = datetime.datetime.combine(date, datetime.datetime.min.time())
-        end_time = datetime.datetime.combine(date, datetime.datetime.max.time())
-        filters = [
-            f"createdTime>={int(start_time.timestamp()) * 1000}",
-            f"createdTime<={int(end_time.timestamp()) * 1000}",
-        ]
-    else:
-        filters = None
+def search_clover_orders(start_date, include_processed=False, end_date=None):
+    end_date = end_date or start_date
+
+    start_time = datetime.datetime.combine(start_date, datetime.datetime.min.time())
+    end_time = datetime.datetime.combine(end_date, datetime.datetime.max.time())
+    filters = [
+        f"createdTime>={int(start_time.timestamp()) * 1000}",
+        f"createdTime<={int(end_time.timestamp()) * 1000}",
+    ]
 
     delivery_orders = []
     offset = 0
     chunk_size = 1000
     while True:
-        orders_data = request_clover_orders(filters=filters, limit=chunk_size, offset=offset)
-        orders = orders_data.get('elements', None)
+        orders_data = request_clover_orders(
+            filters=filters, limit=chunk_size, offset=offset
+        )
+        orders = orders_data.get("elements", None)
         if not orders:
             break
-        delivery_orders.extend(list(filter(is_clover_delivery, orders_data["elements"])))
+        delivery_orders.extend(
+            list(filter(is_clover_delivery, orders_data["elements"]))
+        )
         if len(orders) < chunk_size:
             break
         offset += chunk_size
@@ -117,15 +120,18 @@ def search_clover_orders(date, include_processed=False):
     if not delivery_orders:
         return []
 
-    if not include_processed:
-        scheduled_deliveries = Delivery.objects.annotate(
-            clover_id=Upper("order_number")
-        ).filter(clover_id__in=[x["id"] for x in delivery_orders])
-        scheduled_delivery_order_numbers = list((x.clover_id for x in scheduled_deliveries))
-        delivery_orders = [o for o in delivery_orders if o["id"] not in scheduled_delivery_order_numbers]
+    scheduled_orders = Delivery.objects.annotate(
+        clover_id=Upper("order_number")
+    ).filter(clover_id__in=[x["id"] for x in delivery_orders])
+    scheduled_orders_dict = {o.clover_id: o for o in scheduled_orders}
 
-    orders = [
-       Delivery.create_from_clover(o, skip_items=True) for o in delivery_orders
-    ]
+    orders = []
+    for o in delivery_orders:
+        if o["id"] in scheduled_orders_dict:
+            if include_processed:
+                orders.append(scheduled_orders_dict.get(o["id"]))
+        else:
+            orders.append(Delivery.create_from_clover(o, skip_items=True))
+
     orders.sort(key=lambda o: o.created_at, reverse=True)
     return orders
