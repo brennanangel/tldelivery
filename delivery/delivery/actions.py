@@ -1,12 +1,17 @@
 import datetime
 import json
 from os import path
+from typing import Set
 import requests
 from django.conf import settings
 from django.db.models.functions import Upper
 
 from .models import Delivery
-from .clover import request_clover_orders, is_clover_delivery
+from .clover import (
+    request_clover_orders,
+    is_clover_delivery,
+    request_clover_customer_list,
+)
 
 
 def create_onfleet_task_from_order(obj):
@@ -71,7 +76,7 @@ def get_onfleet_trucks():
     response = requests.get(
         path.join(settings.ONFLEET_INTEGRATION_API, "tasks"),
         auth=requests.auth.HTTPBasicAuth(settings.ONFLEET_API_KEY, None),
-        params={"from": "1514793600000", "state": 1,},
+        params={"from": "1514793600000", "state": "1"},
     )
     tasks = {}
     for task in response.json():
@@ -124,6 +129,21 @@ def search_clover_orders(start_date, include_processed=False, end_date=None):
         clover_id=Upper("order_number")
     ).filter(clover_id__in=[x["id"] for x in delivery_orders])
     scheduled_orders_dict = {o.clover_id: o for o in scheduled_orders}
+
+    # TEMP: prepopulate the customer cache because the clover orders call doesn't return details
+    incomplete_customers: Set[str] = set()
+    for o in delivery_orders:
+        customers = o["customers"]["elements"]
+        if len(customers) != 1:
+            continue
+        customer = customers[0]
+        # treat as proxy for complete
+        if "addresses" in customer:
+            continue
+        incomplete_customers.add(customer["id"])
+
+    _ = request_clover_customer_list(list(incomplete_customers))
+    # END TEMP
 
     orders = []
     for o in delivery_orders:

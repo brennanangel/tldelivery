@@ -1,6 +1,8 @@
 from os import path
+from typing import Sequence
 import requests
 from django.conf import settings
+from django.core.cache import cache
 
 
 def request_clover(url, params):
@@ -43,6 +45,53 @@ def request_clover_orders(order_number=None, filters=None, offset=None, limit=No
         order_response.raise_for_status()
 
     return order_response.json()
+
+
+def _customer_cache_key(id: str) -> str:
+    return f"CLOVER/CLOVER_CUSTOMER_{id}"
+
+
+def request_clover_customer(id: str):
+    data = cache.get(_customer_cache_key(id), None)
+    if data:
+        return data
+    customers_url = path.join(
+        settings.CLOVER_INTEGRATION_API,
+        "merchants",
+        settings.CLOVER_MERCHANT_ID,
+        "customers",
+        id,
+    )
+    params = {"expand": "addresses,emailAddresses,phoneNumbers"}
+    response = request_clover(customers_url, params)
+    if id and response.status_code == 404:
+        raise ValueError(f"Customer {id} not found in Clover.")
+    elif response.status_code != 200:
+        response.raise_for_status()
+
+    data = response.json()
+    cache.set(_customer_cache_key(id), data)
+    return data
+
+
+def request_clover_customer_list(ids: Sequence[str]):
+    customers_url = path.join(
+        settings.CLOVER_INTEGRATION_API,
+        "merchants",
+        settings.CLOVER_MERCHANT_ID,
+        "customers",
+    )
+    customer_query_param_list = "','".join(ids)
+    filter_str = f"id in ('{customer_query_param_list}')"
+    params = {"filter": filter_str, "expand": "addresses,emailAddresses,phoneNumbers"}
+    response = request_clover(customers_url, params)
+    if response.status_code != 200:
+        response.raise_for_status()
+
+    customer_data = {c["id"]: c for c in response.json()["elements"]}
+    for k, data in customer_data.items():
+        cache.set(_customer_cache_key(k), data)
+    return customer_data
 
 
 def is_clover_delivery_item(item_name):

@@ -8,7 +8,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from delivery.delivery.clover import (
     request_clover_orders,
-    request_clover,
+    request_clover_customer,
     is_clover_delivery_item,
 )
 
@@ -37,7 +37,9 @@ class Shift(models.Model):
     def slots_filled(self):
         if self.id is None:
             return None
-        return cache.get_or_set(self.FILLED_CACHE_TEMPLATE.format(id=self.id), self.delivery_set.count)
+        return cache.get_or_set(
+            self.FILLED_CACHE_TEMPLATE.format(id=self.id), self.delivery_set.count
+        )
 
     @property
     def slots_remaining(self):
@@ -158,7 +160,10 @@ class Delivery(models.Model):
             if quantity <= 0:
                 continue
             self.item_set.create(
-                clover_id=item["id"], item_name=item_name, quantity=quantity, is_pulled=True
+                clover_id=item["id"],
+                item_name=item_name,
+                quantity=quantity,
+                is_pulled=True,
             )
 
     def _load_clover_customer(self, order_data):
@@ -172,14 +177,10 @@ class Delivery(models.Model):
                 f"Unexpected number ({len(customers)}) of customers found on order"
             )
         customer = customers[0]
-        customer_params = {"expand": "addresses,emailAddresses,phoneNumbers"}
         self.recipient_last_name = customer.get("lastName")
         self.recipient_first_name = customer.get("firstName")
         if customer["href"]:
-            customer_response = request_clover(customer["href"], customer_params)
-            if customer_response.status_code != 200:
-                customer_response.raise_for_status()
-            customer_data = customer_response.json()
+            customer_data = request_clover_customer(customer["id"])
             self.recipient_last_name = self.recipient_last_name or customer_data.get(
                 "lastName", None
             )
