@@ -46,7 +46,11 @@ def request_clover_orders(order_number=None, filters=None, offset=None, limit=No
 
 
 def is_clover_delivery_item(item_name):
-    return "Shipping and Handling" in item_name or "Delivery" in item_name
+    return (
+        "Shipping and Handling" in item_name
+        or "Delivery" in item_name
+        or "Shipping Fee" in item_name
+    )
 
 
 def is_clover_delivery(order_info):
