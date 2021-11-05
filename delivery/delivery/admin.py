@@ -1,5 +1,6 @@
 import datetime
 import csv
+from typing import List
 from django.contrib import admin, messages
 from django.urls import reverse
 
@@ -18,7 +19,7 @@ from .models import (
 from .actions import create_onfleet_task_from_order
 
 
-def export_as_csv(self, request, queryset):
+def export_as_csv(self, request, queryset) -> HttpResponse:
     meta = self.model._meta
     field_names = [field.name for field in meta.fields]
 
@@ -33,7 +34,7 @@ def export_as_csv(self, request, queryset):
     return response
 
 
-export_as_csv.short_description = "Export Selected"
+export_as_csv.short_description = "Export Selected"  # type: ignore
 
 
 class IsAvailableFilter(admin.SimpleListFilter):
@@ -88,11 +89,24 @@ class ShiftAdmin(admin.ModelAdmin):
     def slots(self, obj):
         return obj.slots_display
 
+    def get_queryset(self, request):
+
+        shift_counts = Delivery.objects.values("delivery_shift_id").annotate(
+            Count("delivery_shift_id")
+        )
+        for shift_count in shift_counts:
+            cache.set(
+                Shift.FILLED_CACHE_TEMPLATE.format(id=shift_count["delivery_shift_id"]),
+                shift_count["delivery_shift_id__count"],
+            )
+
+        return super().get_queryset(request)
+
 
 class DeliveryForm(ModelForm):
     class Meta:
         model = Delivery
-        exclude = []
+        exclude: List[str] = []
 
     def __init__(self, *args, **kwargs):
         super(DeliveryForm, self).__init__(*args, **kwargs)
