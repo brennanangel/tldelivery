@@ -260,6 +260,17 @@ class DeliveryAdmin(admin.ModelAdmin):
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
         if db_field.name == "delivery_shift":
+            shift_counts = Delivery.objects.values("delivery_shift_id").annotate(
+                Count("delivery_shift_id")
+            )
+            for shift_count in shift_counts:
+                cache.set(
+                    Shift.FILLED_CACHE_TEMPLATE.format(
+                        id=shift_count["delivery_shift_id"]
+                    ),
+                    shift_count["delivery_shift_id__count"],
+                )
+
             # dirty trick so queryset is evaluated and cached in .choices
             formfield.choices = formfield.choices
         return formfield
