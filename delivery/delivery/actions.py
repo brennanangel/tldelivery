@@ -133,6 +133,8 @@ def search_clover_orders(start_date, include_processed=False, end_date=None):
     # TEMP: prepopulate the customer cache because the clover orders call doesn't return details
     incomplete_customers: Set[str] = set()
     for o in delivery_orders:
+        if "customers" not in o:
+            continue
         customers = o["customers"]["elements"]
         if len(customers) != 1:
             continue
