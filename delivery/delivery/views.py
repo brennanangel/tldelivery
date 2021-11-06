@@ -293,6 +293,7 @@ def NewOrderView(request):
         200,  # list_max_show_all
         model_admin.list_editable,
         model_admin,
+        model_admin.sortable_by
     )
 
     cl.formset = FormSet(  # pylint: disable=attribute-defined-outside-init
