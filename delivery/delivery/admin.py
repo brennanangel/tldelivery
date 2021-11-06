@@ -1,11 +1,12 @@
 import datetime
 import csv
-from typing import List
+from typing import List, Callable
 from django.contrib import admin, messages
 from django.urls import reverse
 
 from django.core.cache import cache
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, HttpRequest
+from django.db.models.query import QuerySet
 from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
 from django.forms import ModelForm
 from django.contrib.admin.utils import quote
@@ -19,7 +20,9 @@ from .models import (
 from .actions import create_onfleet_task_from_order
 
 
-def export_as_csv(self, request, queryset) -> HttpResponse:
+def export_as_csv(
+    self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet
+) -> HttpResponse:
     meta = self.model._meta
     field_names = [field.name for field in meta.fields]
 
@@ -121,6 +124,9 @@ class DeliveryForm(ModelForm):
 
 class DeliveryAdmin(admin.ModelAdmin):
     form = DeliveryForm
+    # formfield_overrides = {
+    #    ForeignKey: {"widget": RelatedFieldWidgetWrapperNoEdit},
+    # }
     list_display = (
         "order_number",
         "delivery_shift",
@@ -271,8 +277,12 @@ class DeliveryAdmin(admin.ModelAdmin):
                     shift_count["delivery_shift_id__count"],
                 )
 
-            # dirty trick so queryset is evaluated and cached in .choices
-            formfield.choices = formfield.choices
+            # hack so queryset is evaluated and cached in .choices
+            formfield.choices = formfield.choices  # type: ignore
+            # hack so we don't show shift edit buttons on the shift selector widget
+            formfield.widget.can_add_related = False  # type: ignore
+            formfield.widget.can_delete_related = False  # type: ignore
+            formfield.widget.can_change_related = False  # type: ignore
         return formfield
 
 
