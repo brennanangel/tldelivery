@@ -155,6 +155,10 @@ typings/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+*.code-workspace
+
+# Local History for Visual Studio Code
+.history/
 
 
 
@@ -262,7 +266,6 @@ Session.vim
 
 # Auto-generated tag files
 tags
-
 
 ### Project template
 
