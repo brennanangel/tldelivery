@@ -6,8 +6,8 @@ class DeliveryConfig(AppConfig):
     verbose_name = "Delivery"
 
     def ready(self):
-        """Override this to put in:
-            Users system checks
-            Users signal registration
-        """
-        pass
+        try:
+            import delivery.delivery.signals  # noqa F401
+        except ImportError:
+            pass
+

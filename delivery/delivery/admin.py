@@ -4,13 +4,12 @@ from typing import List, Callable
 from django.contrib import admin, messages
 from django.urls import reverse
 
-from django.core.cache import cache
 from django.http import HttpResponseRedirect, HttpResponse, HttpRequest
 from django.db.models.query import QuerySet
 from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
 from django.forms import ModelForm
 from django.contrib.admin.utils import quote
-from django.db.models import Count
+
 
 from .models import (
     Shift,
@@ -91,19 +90,6 @@ class ShiftAdmin(admin.ModelAdmin):
 
     def slots(self, obj):
         return obj.slots_display
-
-    def get_queryset(self, request):
-
-        shift_counts = Delivery.objects.values("delivery_shift_id").annotate(
-            Count("delivery_shift_id")
-        )
-        for shift_count in shift_counts:
-            cache.set(
-                Shift.FILLED_CACHE_TEMPLATE.format(id=shift_count["delivery_shift_id"]),
-                shift_count["delivery_shift_id__count"],
-            )
-
-        return super().get_queryset(request)
 
 
 class DeliveryForm(ModelForm):
@@ -251,31 +237,9 @@ class DeliveryAdmin(admin.ModelAdmin):
                 return HttpResponseRedirect(redirect_url)
         return super().add_view(request, form_url, extra_context)
 
-    def get_queryset(self, request):
-        shift_counts = Delivery.objects.values("delivery_shift_id").annotate(
-            Count("delivery_shift_id")
-        )
-        for shift_count in shift_counts:
-            cache.set(
-                Shift.FILLED_CACHE_TEMPLATE.format(id=shift_count["delivery_shift_id"]),
-                shift_count["delivery_shift_id__count"],
-            )
-
-        return super().get_queryset(request)
-
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
         if db_field.name == "delivery_shift":
-            shift_counts = Delivery.objects.values("delivery_shift_id").annotate(
-                Count("delivery_shift_id")
-            )
-            for shift_count in shift_counts:
-                cache.set(
-                    Shift.FILLED_CACHE_TEMPLATE.format(
-                        id=shift_count["delivery_shift_id"]
-                    ),
-                    shift_count["delivery_shift_id__count"],
-                )
 
             # hack so queryset is evaluated and cached in .choices
             formfield.choices = formfield.choices  # type: ignore

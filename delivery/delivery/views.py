@@ -4,7 +4,6 @@ import datetime
 import re
 from distutils.util import strtobool
 from dateutil.parser import parse
-from django.core.cache import cache
 from django.views.generic.detail import DetailView
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.admin import SimpleListFilter, site as admin_site
@@ -85,7 +84,11 @@ def OnfleetTruckView(request):
     return render(
         request,
         "delivery/trucks.html",
-        {"teams": teams, "workers": workers, "tasks": tasks,},
+        {
+            "teams": teams,
+            "workers": workers,
+            "tasks": tasks,
+        },
     )
 
 
@@ -216,14 +219,6 @@ class NewOrderAdmin(DeliveryAdmin):
 def NewOrderView(request):
     model_admin = NewOrderAdmin(Delivery, admin_site)
 
-    shift_counts = Delivery.objects.values("delivery_shift_id").annotate(
-        Count("delivery_shift_id")
-    )
-    for shift_count in shift_counts:
-        cache.set(
-            Shift.FILLED_CACHE_TEMPLATE.format(id=shift_count["delivery_shift_id"]),
-            shift_count["delivery_shift_id__count"],
-        )
     FormSet = model_admin.get_changelist_formset(request)
 
     if request.method == "POST" and "_save" in request.POST:
@@ -293,7 +288,7 @@ def NewOrderView(request):
         200,  # list_max_show_all
         model_admin.list_editable,
         model_admin,
-        model_admin.sortable_by
+        model_admin.sortable_by,
     )
 
     cl.formset = FormSet(  # pylint: disable=attribute-defined-outside-init

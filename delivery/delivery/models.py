@@ -16,14 +16,54 @@ from delivery.delivery.clover import (
 
 
 class Shift(models.Model):
-    FILLED_CACHE_TEMPLATE = "shift_{id}_count_filled"
+    SHIFT_FILLED_CACHE_TEMPLATE = "shift_{id}_count_filled"
     date = models.DateField()
     time = models.CharField(
-        choices=(("AM", "AM"), ("PM", "PM"), ("SP", "Special")), max_length=2,
+        choices=(("AM", "AM"), ("PM", "PM"), ("SP", "Special")),
+        max_length=2,
     )
-    slots_available = models.SmallIntegerField(default=20,)
-    comment = models.CharField(blank=True, null=True, max_length=255,)
-    notes = models.TextField(blank=True, null=True,)
+    slots_available = models.SmallIntegerField(
+        default=20,
+    )
+    comment = models.CharField(
+        blank=True,
+        null=True,
+        max_length=255,
+    )
+    notes = models.TextField(
+        blank=True,
+        null=True,
+    )
+
+    @classmethod
+    def bust_available_shift_cache(cls) -> None:
+        # naive bust for when we have changes
+        cache.delete_many(
+            [
+                Shift.SHIFT_FILLED_CACHE_TEMPLATE.format(id=sid)
+                for sid in cls.objects.all().values_list("id", flat=True)
+            ]
+        )
+
+    @classmethod
+    def set_available_shift_cache(cls) -> None:
+        shift_ids = cls.objects.all().values_list("id", flat=True)
+        shift_counts = Delivery.objects.values("delivery_shift_id").annotate(
+            models.Count("delivery_shift_id")
+        )
+        count_by_shift = {
+            shift_count["delivery_shift_id"]: shift_count["delivery_shift_id__count"]
+            for shift_count in shift_counts
+        }
+
+        cache.set_many(
+            {
+                Shift.SHIFT_FILLED_CACHE_TEMPLATE.format(id=sid): count_by_shift.get(
+                    sid, 0
+                )
+                for sid in shift_ids
+            }
+        )
 
     @property
     def date_display(self):
@@ -34,12 +74,15 @@ class Shift(models.Model):
         return "{date} {time}".format(date=self.date_display, time=self.time)
 
     @property
-    def slots_filled(self):
+    def slots_filled(self) -> int:
         if self.id is None:
-            return None
-        return cache.get_or_set(
-            self.FILLED_CACHE_TEMPLATE.format(id=self.id), self.delivery_set.count
-        )
+            return 0
+        cache_key = self.SHIFT_FILLED_CACHE_TEMPLATE.format(id=self.id)
+        count = cache.get(cache_key, None)
+        if count is None:
+            self.set_available_shift_cache()
+            count = cache.get(cache_key, 0)
+        return count
 
     @property
     def slots_remaining(self):
@@ -89,7 +132,8 @@ class Shift(models.Model):
 
     def __str__(self):
         return "{datetime} - {status}".format(
-            datetime=self.datetime_display, status=self.slots_display,
+            datetime=self.datetime_display,
+            status=self.slots_display,
         )
 
     class Meta:
@@ -97,21 +141,61 @@ class Shift(models.Model):
 
 
 class Delivery(models.Model):
-    order_number = models.CharField(blank=True, null=True, max_length=20, unique=True,)
-    delivery_shift = models.ForeignKey(Shift, db_index=True, on_delete=models.PROTECT,)
-    recipient_last_name = models.CharField(blank=True, null=True, max_length=40,)
-    recipient_first_name = models.CharField(blank=True, null=True, max_length=40,)
-    recipient_phone_number = models.CharField(
-        blank=True, null=True, max_length=255, unique=True,
+    order_number = models.CharField(
+        blank=True,
+        null=True,
+        max_length=20,
+        unique=True,
     )
-    recipient_email = models.CharField(blank=True, null=True, max_length=255,)
+    delivery_shift = models.ForeignKey(
+        Shift,
+        db_index=True,
+        on_delete=models.PROTECT,
+    )
+    recipient_last_name = models.CharField(
+        blank=True,
+        null=True,
+        max_length=40,
+    )
+    recipient_first_name = models.CharField(
+        blank=True,
+        null=True,
+        max_length=40,
+    )
+    recipient_phone_number = models.CharField(
+        blank=True,
+        null=True,
+        max_length=255,
+        unique=True,
+    )
+    recipient_email = models.CharField(
+        blank=True,
+        null=True,
+        max_length=255,
+    )
     address_name = models.CharField(
         blank=True, null=True, max_length=255, help_text="e.g., Company Name"
     )
-    address_line_1 = models.CharField(blank=True, null=True, max_length=255,)
-    address_line_2 = models.CharField(blank=True, null=True, max_length=255,)
-    address_city = models.CharField(blank=True, null=True, max_length=40,)
-    address_postal_code = models.CharField(blank=True, null=True, max_length=10,)
+    address_line_1 = models.CharField(
+        blank=True,
+        null=True,
+        max_length=255,
+    )
+    address_line_2 = models.CharField(
+        blank=True,
+        null=True,
+        max_length=255,
+    )
+    address_city = models.CharField(
+        blank=True,
+        null=True,
+        max_length=40,
+    )
+    address_postal_code = models.CharField(
+        blank=True,
+        null=True,
+        max_length=10,
+    )
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -281,7 +365,10 @@ class Delivery(models.Model):
                     "name": "order_number",
                     "type": "string",
                     "value": self.order_number,
-                    "visibility": ["api", "dashboard",],
+                    "visibility": [
+                        "api",
+                        "dashboard",
+                    ],
                 }
             ]
             if self.order_number
@@ -371,7 +458,8 @@ class Delivery(models.Model):
 
     def __str__(self):
         return "{name} ({order_number})".format(
-            name=self.recipient_name, order_number=self.order_number,
+            name=self.recipient_name,
+            order_number=self.order_number,
         )
 
     class Meta:
@@ -379,12 +467,22 @@ class Delivery(models.Model):
 
 
 class Item(models.Model):
-    delivery = models.ForeignKey(Delivery, db_index=True, on_delete=models.CASCADE,)
-    item_name = models.CharField(max_length=255,)
+    delivery = models.ForeignKey(
+        Delivery,
+        db_index=True,
+        on_delete=models.CASCADE,
+    )
+    item_name = models.CharField(
+        max_length=255,
+    )
     quantity = models.SmallIntegerField()
     picked_up = models.BooleanField(default=False)
     note = models.CharField(null=True, blank=True, max_length=255)
-    clover_id = models.CharField(null=True, blank=True, max_length=40,)
+    clover_id = models.CharField(
+        null=True,
+        blank=True,
+        max_length=40,
+    )
     is_pulled = models.BooleanField(default=False)
 
     def __str__(self):
