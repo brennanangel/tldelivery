@@ -12,7 +12,11 @@ def request_clover(url, params):
         "Content-Type": "Application/JSON",
         "Authorization": "Bearer " + settings.CLOVER_API_KEY,
     }
-    return requests.get(url, params=params, headers=headers,)
+    return requests.get(
+        url,
+        params=params,
+        headers=headers,
+    )
 
 
 def request_clover_orders(order_number=None, filters=None, offset=None, limit=None):
