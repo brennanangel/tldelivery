@@ -8,6 +8,7 @@ from django.views.generic import TemplateView
 
 admin.site.site_header = "Guardsmen Tree Lot Delivery Desk"
 admin.site.site_title = "Scheduler"
+admin.site.site_url = None
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),

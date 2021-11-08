@@ -32,18 +32,30 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .page {
   page-break-after: always;
 }
 
-@media print
-{
-    .no-print, .no-print *
-    {
-        display: none !important;
-    }
+@media print {
+  .no-print,
+  .no-print * {
+    display: none !important;
+  }
+}
+
+/* override inconsistencies in admin_interface */
+form .button {
+  padding: 4px 5px !important;
+}
+
+.field-shift_actions .button {
+  margin: 0;
 }

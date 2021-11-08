@@ -107,7 +107,7 @@ class Shift(models.Model):
             return "[save record first]"
         return mark_safe(
             format_html(
-                '<button class="btn btn-primary onfleet-button" name="_push" data-id="{id}">Send to Onfleet</button>',
+                '<button class="button button-primary onfleet-button" name="_push" data-id="{id}">Send to Onfleet</button>',
                 id=self.id,
             )
         )
@@ -120,8 +120,8 @@ class Shift(models.Model):
             return None
         return mark_safe(
             format_html(
-                '<a class="btn" href="{walk}" target="_blank">Generate Walk List</a>&nbsp;'
-                '<button class="btn onfleet-button shift" name="_push" data-id="{id}">Send to Onfleet</button>',
+                '<a class="button" href="{walk}" target="_blank">Generate Walk List</a>&nbsp;'
+                '<button class="button onfleet-button shift" name="_push" data-id="{id}">Send to Onfleet</button>',
                 walk=reverse("walk-list", args=[self.id]),
                 id=self.id,
             )
@@ -423,7 +423,7 @@ class Delivery(models.Model):
     def sync_button(self):
         return mark_safe(
             format_html(
-                '<button class="btn btn-primary sync-button" name="_sync" data-order-id="{order_number}">Sync with Clover</button>',
+                '<button class="button button-primary sync-button" name="_sync" data-order-id="{order_number}">Sync with Clover</button>',
                 order_number=self.order_number,
             )
         )
@@ -436,7 +436,7 @@ class Delivery(models.Model):
             return "[save record first]"
         return mark_safe(
             format_html(
-                '<button class="btn btn-primary onfleet-button order" name="_push" data-id="{id}">Send to Onfleet</button>',
+                '<button class="button button-primary onfleet-button order" name="_push" data-id="{id}">Send to Onfleet</button>',
                 id=self.id,
                 order_number=self.order_number,
             )
@@ -450,7 +450,7 @@ class Delivery(models.Model):
             return "[save record first]"
         return mark_safe(
             format_html(
-                '<a class="btn" href="{order_sheet}" target="_blank">Generate Delivery Sheet</a>&nbsp;',
+                '<a class="button" href="{order_sheet}" target="_blank">Generate Delivery Sheet</a>&nbsp;',
                 order_sheet=reverse("order-sheet", args=[self.id]),
             )
         )
