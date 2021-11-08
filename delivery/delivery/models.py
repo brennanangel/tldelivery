@@ -207,6 +207,8 @@ class Delivery(models.Model):
     @property
     def recipient_name(self):
         if self.recipient_first_name is None:
+            if self.recipient_last_name is None:
+                return "[No Name]"
             return self.recipient_last_name
         elif self.recipient_last_name is None:
             return self.recipient_first_name + " [LAST NAME UNKNOWN]"
