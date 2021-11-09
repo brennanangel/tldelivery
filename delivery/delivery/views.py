@@ -17,7 +17,7 @@ from django.template.response import TemplateResponse
 from django.core.paginator import Paginator
 from django.urls import reverse
 from django.utils.html import mark_safe
-from django.db.models import Count
+
 
 from .models import Shift, Delivery
 from .actions import (
@@ -312,6 +312,7 @@ def NewOrderView(request):
     )
 
     context = {
+        **admin_site.each_context(request),
         "module_name": "Orders",
         "title": "New Orders",
         "is_popup": False,
