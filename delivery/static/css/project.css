@@ -59,3 +59,12 @@ form .button {
 .field-shift_actions .button {
   margin: 0;
 }
+
+#changelist-filter .controls {
+  padding: 0 15px;
+  margin-bottom: 10px;
+}
+
+#changelist-filter .controls .datetimeshortcuts {
+  display: inline-flex;
+}
