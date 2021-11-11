@@ -11,7 +11,9 @@ from .clover import (
     request_clover_orders,
     is_clover_delivery,
     request_clover_customer_list,
+    parse_shopify_order_number,
 )
+from .shopify import get_shifts_from_shopify
 
 
 def create_onfleet_task_from_order(obj):
@@ -147,13 +149,20 @@ def search_clover_orders(start_date, include_processed=False, end_date=None):
     _ = request_clover_customer_list(list(incomplete_customers))
     # END TEMP
 
+    shifts_in_shopify = get_shifts_from_shopify(
+        list(filter(None, (parse_shopify_order_number(o) for o in delivery_orders)))
+    )
     orders = []
     for o in delivery_orders:
         if o["id"] in scheduled_orders_dict:
             if include_processed:
                 orders.append(scheduled_orders_dict.get(o["id"]))
         else:
-            orders.append(Delivery.create_from_clover(o, skip_items=True))
+            shift = shifts_in_shopify.get(parse_shopify_order_number(o))
+
+            orders.append(
+                Delivery.create_from_clover(o, skip_items=True, delivery_shift=shift)
+            )
 
     orders.sort(key=lambda o: o.created_at, reverse=True)
     return orders

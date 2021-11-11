@@ -1,5 +1,6 @@
 import datetime
 import pytz
+from typing import Optional
 import phonenumbers
 from django.db import models
 from django.core.cache import cache
@@ -329,11 +330,13 @@ class Delivery(models.Model):
         self._load_clover_customer(order_data)
 
     @classmethod
-    def create_from_clover(cls, order_data, skip_items=False):
+    def create_from_clover(
+        cls, order_data, delivery_shift: Optional[Shift] = None, skip_items=False
+    ):
         order_number = order_data["id"]
         if not order_number:
             raise ValueError("No order number found in payload")
-        d = cls(order_number=order_number)
+        d = cls(order_number=order_number, delivery_shift=delivery_shift)
         d.load_from_clover(order_data, skip_items=skip_items)
         return d
 

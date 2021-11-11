@@ -1,5 +1,6 @@
 from os import path
-from typing import Sequence
+import re
+from typing import Sequence, Optional
 import requests
 from django.conf import settings
 from django.core.cache import cache
@@ -117,3 +118,18 @@ def is_clover_delivery(order_info):
         if is_clover_delivery_item(item["name"]):
             return True
     return False
+
+
+_SHOPIFY_TITLE_PATTERN = re.compile(
+    r"Shopify Order ID: (?P<shopify_id>\d+)-SkuIQ Order #\d+"
+)
+
+
+def parse_shopify_order_number(order_info) -> Optional[str]:
+    if "title" not in order_info:
+        return None
+    title = order_info["title"]
+    match = _SHOPIFY_TITLE_PATTERN.match(title)
+    if match is None:
+        return None
+    return match.group("shopify_id")
