@@ -16,12 +16,12 @@ DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)  # no
 
 # CACHES
 # ------------------------------------------------------------------------------
-REDIS_URL = env("REDIS_URL", None)
+REDIS_URL = env("REDIS_URL", default=None)
 if REDIS_URL:
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": env("REDIS_URL"),
+            "LOCATION": REDIS_URL,
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
                 # Mimicing memcache behavior.
@@ -58,17 +58,18 @@ SECURE_CONTENT_TYPE_NOSNIFF = env.bool(
 
 # STORAGES
 # ------------------------------------------------------------------------------
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# we don't have any media storage
+"""
 # https://django-storages.readthedocs.io/en/latest/#installation
 INSTALLED_APPS += ["storages"]  # noqa F405
-GS_BUCKET_NAME = env("DJANGO_GCP_STORAGE_BUCKET_NAME")
+GS_BUCKET_NAME = env("GS_BUCKET_NAME")
 GS_DEFAULT_ACL = "publicRead"
-# STATIC
-# ------------------------
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # MEDIA
 # ------------------------------------------------------------------------------
 DEFAULT_FILE_STORAGE = "delivery.utils.storages.MediaRootGoogleCloudStorage"
 MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/media/"
+"""
 
 # TEMPLATES
 # ------------------------------------------------------------------------------
