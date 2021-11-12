@@ -68,3 +68,7 @@ form .button {
 #changelist-filter .controls .datetimeshortcuts {
   display: inline-flex;
 }
+
+#changelist-filter .controls .apply-date-filter {
+  padding: 1px 16px;
+}

@@ -179,7 +179,7 @@ class NewOrderAdmin(DeliveryAdmin):
     class Media:
         js = [
             "admin/js/calendar.js",
-            "admin/js/admin/DateTimeShortcuts.js",
+            "js/FilterDateTimeShortcuts.js",
         ]
 
     def action(self, obj):
@@ -257,12 +257,10 @@ def NewOrderView(request):
                     continue
                 delivery.order_number = order_number
                 delivery.delivery_shift_id = delivery_shift_id
-                print(delivery)
             else:
                 delivery = Delivery(
                     order_number=order_number, delivery_shift_id=delivery_shift_id
                 )
-                print(delivery)
 
     if "include_processed" not in request.GET:
         q = request.GET.copy()
