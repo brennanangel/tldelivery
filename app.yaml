@@ -14,6 +14,8 @@ handlers:
     script: auto
 
 env_variables:
-  DJANGO_READ_DOT_ENV_FILE: "True"
+  DJANGO_READ_DOT_ENV_FILE: "False"
 
-  # [END django_app]
+includes:
+  - env.yaml
+# [END django_app]

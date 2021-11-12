@@ -272,5 +272,10 @@ tags
 delivery/media/
 
 .pytest_cache/
+
+### Secrets
 .env
 .envs/*
+
+# deployment secrets
+env.yaml

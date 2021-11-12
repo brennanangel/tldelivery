@@ -14,4 +14,4 @@ All other commands are basic Django, e.g., `python manage.py migrate`, `python m
 
 ## Deploy
 
-The respository is hooked up to a Google Cloud CD pipeline, which will build the Docker container and deploy to a Kubernetes cluster automatically.
+The app lives on Google Cloud's App Engine. Copy all of the relevant secrets to an `env.yaml` file and deploy.
