@@ -16,7 +16,8 @@ from django.contrib.auth.decorators import login_required
 from django.template.response import TemplateResponse
 from django.core.paginator import Paginator
 from django.urls import reverse
-from django.utils.html import mark_safe
+from django.utils.safestring import mark_safe
+from django.utils.encoding import force_text
 
 
 from .models import Shift, Delivery
@@ -124,6 +125,17 @@ class NewOrderProcessedFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         return queryset
+
+    def choices(self, changelist):
+        # remove first "All" option
+        for lookup, title in self.lookup_choices:
+            yield {
+                "selected": self.value() == force_text(lookup),
+                "query_string": changelist.get_query_string(
+                    {self.parameter_name: lookup}, []
+                ),
+                "display": title,
+            }
 
 
 class SingleDateFilter:
