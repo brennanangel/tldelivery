@@ -1,10 +1,10 @@
 /* Project specific Javascript goes here. */
 function getCookie(name) {
-  var cookieValue = null;
+  let cookieValue = null;
   if (document.cookie && document.cookie !== "") {
-    var cookies = document.cookie.split(";");
+    const cookies = document.cookie.split(";");
     for (var i = 0; i < cookies.length; i++) {
-      var cookie = cookies[i].trim();
+      const cookie = cookies[i].trim();
       // Does this cookie string begin with the name we want?
       if (cookie.substring(0, name.length + 1) === name + "=") {
         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
@@ -15,16 +15,16 @@ function getCookie(name) {
   return cookieValue;
 }
 
-var csrftoken = getCookie("csrftoken");
+const csrftoken = getCookie("csrftoken");
 
 window.addEventListener("load", () => {
   django.jQuery(".results .onfleet-button.order").click(function (evt) {
     evt.preventDefault();
-    var modal = django.jQuery("#progress-modal");
+    const modal = django.jQuery("#progress-modal");
     modal.find(".modal-title").text("Sending order to OnFleet...");
     modal.find(".modal-body").html('<div class="loader"></div>');
     modal.modal("show");
-    var id = django.jQuery(this).attr("data-id");
+    const id = django.jQuery(this).attr("data-id");
     django.jQuery.ajax("/delivery/deliveries/" + id + "/onfleet", {
       method: "POST",
       xhrFields: {
@@ -53,11 +53,11 @@ window.addEventListener("load", () => {
 
   django.jQuery(".onfleet-button.shift").click(function (evt) {
     evt.preventDefault();
-    var modal = django.jQuery("#progress-modal");
+    const modal = django.jQuery("#progress-modal");
     modal.find(".modal-title").text("Sending orders to OnFleet...");
     modal.find(".modal-body").html('<div class="loader"></div>');
     modal.modal("show");
-    var id = django.jQuery(this).attr("data-id");
+    const id = django.jQuery(this).attr("data-id");
     django.jQuery.ajax("/delivery/shift/" + id + "/onfleet", {
       method: "POST",
       xhrFields: {
