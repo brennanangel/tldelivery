@@ -97,6 +97,8 @@ class DeliveryForm(ModelForm):
         model = Delivery
         exclude: List[str] = []
 
+    # comment this out because it's now applying to all validation on this field
+    """
     def __init__(self, *args, **kwargs):
         super(DeliveryForm, self).__init__(*args, **kwargs)
         qs = Shift.objects.filter(date__gte=datetime.date.today())
@@ -106,6 +108,7 @@ class DeliveryForm(ModelForm):
             qs = qs.union(Shift.objects.filter(pk=kwargs["instance"].delivery_shift_id))
 
         self.fields["delivery_shift"].queryset = qs.order_by("date", "time")
+    """
 
 
 class DeliveryAdmin(admin.ModelAdmin):
