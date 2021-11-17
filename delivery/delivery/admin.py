@@ -121,6 +121,7 @@ class DeliveryAdmin(admin.ModelAdmin):
         "delivery_shift",
         "recipient_name",
         "recipient_phone_number",
+        "short_notes",
         "generate_delivery_sheet",
         "push_button",
     )

@@ -2,6 +2,7 @@ import datetime
 import pytz
 from typing import Optional
 import phonenumbers
+from django.contrib import admin
 from django.db import models
 from django.core.cache import cache
 from django.utils.safestring import mark_safe
@@ -12,6 +13,7 @@ from delivery.delivery.clover import (
     request_clover_customer,
     is_clover_delivery_item,
 )
+from django.template.defaultfilters import truncatechars  # or truncatewords
 
 # Create your models here.
 
@@ -224,6 +226,13 @@ class Delivery(models.Model):
             phonenumbers.PhoneNumberFormat.E164,
         )
 
+    def short_notes(self) -> Optional[str]:
+        if not self.notes:
+            return None
+        return truncatechars(self.notes, 50)
+
+    short_notes.description = "Notes"
+
     def _load_clover_items(self, order_data):
         if not order_data.get("lineItems", None):
             return
@@ -318,7 +327,8 @@ class Delivery(models.Model):
                 self.recipient_email = email["emailAddress"]
 
     def load_from_clover(self, order_data, skip_items=False):
-        self.notes = order_data.get("note", self.notes)
+        if not self.notes:
+            self.notes = order_data.get("note", self.notes)
         clover_created_time = order_data.get("createdTime", None)
         self.created_at = (
             datetime.datetime.fromtimestamp(clover_created_time / 1000, tz=pytz.UTC)
