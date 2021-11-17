@@ -178,6 +178,7 @@ class NewOrderAdmin(DeliveryAdmin):
         "created_at",
         "order_number",
         "recipient_name",
+        "notes",
         "delivery_shift",
         "action",
     )
@@ -273,6 +274,8 @@ def NewOrderView(request):
                 delivery = Delivery(
                     order_number=order_number, delivery_shift_id=delivery_shift_id
                 )
+                delivery.sync()
+            delivery.save()
 
     if "include_processed" not in request.GET:
         q = request.GET.copy()
