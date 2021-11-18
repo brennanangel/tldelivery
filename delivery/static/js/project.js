@@ -17,13 +17,35 @@ function getCookie(name) {
 
 const csrftoken = getCookie("csrftoken");
 
+function makeStatusModal(title, content) {
+  return `
+  <div class="modal" tabindex="-1" role="dialog" id="progress-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">${title}</div>
+      </div>
+      <div class="modal-body">
+        ${content}
+      </div>
+    </div>
+  </div>`;
+}
+
 window.addEventListener("load", () => {
+  const showLoadingSpinner = () => {
+    django.jQuery.magnificPopup.open({
+      modal: true,
+      items: {
+        src: '<div class="loader">',
+        type: "inline",
+      },
+    });
+    return django.jQuery.magnificPopup.instance;
+  };
+
   django.jQuery(".results .onfleet-button.order").click(function (evt) {
     evt.preventDefault();
-    const modal = django.jQuery("#progress-modal");
-    modal.find(".modal-title").text("Sending order to OnFleet...");
-    modal.find(".modal-body").html('<div class="loader"></div>');
-    modal.modal("show");
+    const spinner = showLoadingSpinner();
     const id = django.jQuery(this).attr("data-id");
     django.jQuery.ajax("/delivery/deliveries/" + id + "/onfleet", {
       method: "POST",
@@ -34,29 +56,43 @@ window.addEventListener("load", () => {
         "X-CSRFToken": csrftoken,
       },
       success: function (data) {
-        modal.find(".modal-title").text("Success");
-        modal.find(".modal-body").text("Order synced to OnFleet succesfully.");
-        // setTimeout(function() { django.jQuery('#progress-modal').modal('hide'); }, 3000);
+        spinner.close();
+
+        const modalContent = makeStatusModal(
+          "Success",
+          "Order synced to OnFleet succesfully."
+        );
+        django.jQuery.magnificPopup.open({
+          items: [
+            {
+              src: modalContent,
+              type: "inline",
+            },
+          ],
+        });
       },
       error: function (jqXHR, textStatus, errorThrown) {
-        modal.find(".modal-title").text("Sync Failed");
-        modal
-          .find(".modal-body")
-          .html(
-            "<b>" + errorThrown + ":</b> " + jqXHR.responseText ||
-              "Unknown Error"
-          );
-        // setTimeout(function() { django.jQuery('#progress-modal').modal('hide'); }, 3000);
+        spinner.close();
+
+        const modalContent = makeStatusModal(
+          "Sync Failed",
+          "<b>" + errorThrown + ":</b> " + jqXHR.responseText || "Unknown Error"
+        );
+        django.jQuery.magnificPopup.open({
+          items: [
+            {
+              src: modalContent,
+              type: "inline",
+            },
+          ],
+        });
       },
     });
   });
 
   django.jQuery(".onfleet-button.shift").click(function (evt) {
     evt.preventDefault();
-    const modal = django.jQuery("#progress-modal");
-    modal.find(".modal-title").text("Sending orders to OnFleet...");
-    modal.find(".modal-body").html('<div class="loader"></div>');
-    modal.modal("show");
+    const spinner = showLoadingSpinner();
     const id = django.jQuery(this).attr("data-id");
     django.jQuery.ajax("/delivery/shift/" + id + "/onfleet", {
       method: "POST",
@@ -67,21 +103,35 @@ window.addEventListener("load", () => {
         "X-CSRFToken": csrftoken,
       },
       success: function (data) {
-        modal.find(".modal-title").text("Success");
-        modal
-          .find(".modal-body")
-          .text("Order list synced to OnFleet succesfully.");
-        // setTimeout(function() { django.jQuery('#progress-modal').modal('hide'); }, 3000);
+        spinner.close();
+        const modalContent = makeStatusModal(
+          "Success",
+          "Order list synced to OnFleet succesfully."
+        );
+        django.jQuery.magnificPopup.open({
+          items: [
+            {
+              src: modalContent,
+              type: "inline",
+            },
+          ],
+        });
       },
       error: function (jqXHR, textStatus, errorThrown) {
-        modal.find(".modal-title").text("Sync Failed");
-        modal
-          .find(".modal-body")
-          .html(
-            "<b>" + errorThrown + ":</b> " + jqXHR.responseText ||
-              "Unknown Error"
-          );
-        // setTimeout(function() { django.jQuery('#progress-modal').modal('hide'); }, 3000);
+        spinner.close();
+
+        const modalContent = makeStatusModal(
+          "Sync Failed",
+          "<b>" + errorThrown + ":</b> " + jqXHR.responseText || "Unknown Error"
+        );
+        django.jQuery.magnificPopup.open({
+          items: [
+            {
+              src: modalContent,
+              type: "inline",
+            },
+          ],
+        });
       },
     });
   });
