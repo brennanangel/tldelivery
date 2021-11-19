@@ -28,7 +28,11 @@ _SHIFT_FOR_ORDERS_QUERY = """
 """
 
 
-_TIME_TO_SHIFT_MAP = {"03:00 PM - 07:00 PM": "PM", "9:30 AM - 2:00 PM": "AM"}
+_TIME_TO_SHIFT_MAP = {
+    "3:00 PM - 7:00 PM": "PM",
+    "03:00 PM - 07:00 PM": "PM",
+    "9:30 AM - 2:00 PM": "AM",
+}
 
 CACHE = {}
 
