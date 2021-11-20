@@ -1,7 +1,7 @@
 import datetime
 import json
 from os import path
-from typing import Set
+from typing import Optional, Set
 import requests
 from django.conf import settings
 from django.db.models.functions import Upper
@@ -13,7 +13,7 @@ from .clover import (
     request_clover_customer_list,
     parse_shopify_order_number,
 )
-from .shopify import get_shifts_from_shopify
+from .shopify import get_data_from_shopify_by_name
 
 
 def create_onfleet_task_from_order(obj):
@@ -149,7 +149,7 @@ def search_clover_orders(start_date, include_processed=False, end_date=None):
     _ = request_clover_customer_list(list(incomplete_customers))
     # END TEMP
 
-    shifts_in_shopify = get_shifts_from_shopify(
+    shopify_data = get_data_from_shopify_by_name(
         list(filter(None, (parse_shopify_order_number(o) for o in delivery_orders)))
     )
     orders = []
@@ -158,11 +158,23 @@ def search_clover_orders(start_date, include_processed=False, end_date=None):
             if include_processed:
                 orders.append(scheduled_orders_dict.get(o["id"]))
         else:
-            shift = shifts_in_shopify.get(parse_shopify_order_number(o))
-
-            orders.append(
-                Delivery.create_from_clover(o, skip_items=True, delivery_shift=shift)
+            shopify_order_info = None
+            shift = None
+            online_id = None
+            phone = None
+            shopify_order_number = parse_shopify_order_number(o)
+            if shopify_order_number:
+                shopify_order_info = shopify_data.get(shopify_order_number)
+            if shopify_order_info:
+                shift = shopify_order_info.shift
+                online_id = shopify_order_info.online_id
+                phone = shopify_order_info.phone
+            delivery = Delivery.create_from_clover(
+                o, skip_items=True, delivery_shift=shift
             )
+            delivery.online_id = online_id
+            delivery.recipient_phone_number = phone
+            orders.append(delivery)
 
     orders.sort(key=lambda o: o.created_at, reverse=True)
     return orders

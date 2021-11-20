@@ -61,8 +61,8 @@ class ItemInline(admin.TabularInline):
 
 class DeliveryInline(admin.TabularInline):
     model = Delivery
-    fields = ("order_number", "recipient_name", "recipient_phone_number")
-    readonly_fields = ("recipient_name", "recipient_phone_number")
+    fields = ("order_number", "recipient_name", "recipient_phone_number_formatted")
+    readonly_fields = ("recipient_name", "recipient_phone_number_formatted")
     show_change_link = True
     extra = 0
 
@@ -116,28 +116,29 @@ class DeliveryAdmin(admin.ModelAdmin):
     # formfield_overrides = {
     #    ForeignKey: {"widget": RelatedFieldWidgetWrapperNoEdit},
     # }
-    list_display = (
+    list_display = [
         "order_number",
         "delivery_shift",
         "recipient_name",
-        "recipient_phone_number",
+        "recipient_phone_number_formatted",
         "short_notes",
         "generate_delivery_sheet",
         "push_button",
-    )
-    list_filter = ("delivery_shift",)
+    ]
+    list_filter = ["delivery_shift"]
     search_fields = [
         "order_number",
         "recipient_last_name",
         "recipient_phone_number",
+        "recipient_phone_number_formatted",
         "recipient_first_name",
     ]
-    readonly_fields = (
+    readonly_fields = [
         "sync_button",
         "generate_delivery_sheet",
         "push_button",
-    )
-    list_editable = ("delivery_shift",)
+    ]
+    list_editable = ["delivery_shift"]
     fieldsets = (
         ("Main", {"fields": ("order_number", "delivery_shift")}),
         (
@@ -167,7 +168,15 @@ class DeliveryAdmin(admin.ModelAdmin):
                 )
             },
         ),
-        ("Other", {"fields": ("notes",)}),
+        (
+            "Other",
+            {
+                "fields": (
+                    "delivery_type",
+                    "notes",
+                )
+            },
+        ),
     )
     actions = [export_as_csv]
     inlines = [ItemInline]

@@ -2,6 +2,7 @@
 import traceback
 import datetime
 import re
+from typing import Dict
 from distutils.util import strtobool
 from dateutil.parser import parse
 from django.views.generic.detail import DetailView
@@ -96,7 +97,7 @@ def OnfleetTruckView(request):
 class NewOrderChangeList(ChangeList):
     def get_results(self, request):
         params = self.get_filters_params()
-        include_processed = strtobool(params.get("include_processed", False))
+        include_processed = strtobool(params.get("include_processed", "False"))
         try:
             start_date = parse(params.get("date", ""))
         except ValueError:
@@ -170,23 +171,28 @@ class SingleDateFilter:
 
 
 class NewOrderAdmin(DeliveryAdmin):
-    list_editable = (
+    list_editable = [
         "delivery_shift",
         "order_number",
-    )
-    list_display = (
+        "online_id",
+        "recipient_phone_number",
+    ]
+    list_display = [
         "created_at",
         "order_number",
         "recipient_name",
+        "online_order_link",
         "notes",
         "delivery_shift",
         "action",
-    )
-    list_filter = (
+        "recipient_phone_number",
+        "online_id",
+    ]
+    list_filter = [
         NewOrderProcessedFilter,
         SingleDateFilter,
-    )
-    search_fields = ("order_number", "recipient_last_name")
+    ]
+    search_fields = ["order_number", "recipient_last_name"]
     empty_value_display = " - "
 
     class Media:
@@ -194,6 +200,9 @@ class NewOrderAdmin(DeliveryAdmin):
             "admin/js/calendar.js",
             "js/FilterDateTimeShortcuts.js",
         ]
+        css = {
+            "all": ["css/new_order_admin_hide_columns.css"],
+        }
 
     def action(self, obj):
         classes = ["btn"]
@@ -237,7 +246,7 @@ def NewOrderView(request):
     if request.method == "POST" and "_save" in request.POST:
         prefix = FormSet.get_default_prefix()
         num_forms = int(request.POST.get(f"{prefix}-TOTAL_FORMS", 0))
-        objects = {i: {} for i in range(num_forms)}
+        objects: Dict[int, Dict[str, str]] = {i: {} for i in range(num_forms)}
         pk_pattern = re.compile(
             r"{}-(?P<num>\d+)-(?P<field>\w+)$".format(
                 re.escape(FormSet.get_default_prefix())
@@ -257,10 +266,9 @@ def NewOrderView(request):
         for obj in objects.values():
             pk = obj["id"]
             order_number = obj["order_number"]
-            delivery_shift_id = obj["delivery_shift"]
-            if not delivery_shift_id or not order_number:
+            if not obj["delivery_shift"] or not order_number:
                 continue
-            delivery_shift_id = int(delivery_shift_id)
+            delivery_shift_id = obj["delivery_shift"]
             if pk:
                 delivery = existing_deliveries[int(pk)]
                 if (
@@ -271,8 +279,13 @@ def NewOrderView(request):
                 delivery.order_number = order_number
                 delivery.delivery_shift_id = delivery_shift_id
             else:
+                recipient_phone_number = obj["recipient_phone_number"] or None
+                online_id = obj["online_id"] or None
                 delivery = Delivery(
-                    order_number=order_number, delivery_shift_id=delivery_shift_id
+                    order_number=order_number,
+                    delivery_shift_id=delivery_shift_id,
+                    recipient_phone_number=recipient_phone_number,
+                    online_id=online_id,
                 )
                 delivery.sync()
             delivery.save()
@@ -318,6 +331,16 @@ def NewOrderView(request):
             },
             **{
                 f"form-{n}-delivery_shift": getattr(o, "delivery_shift_id", None)
+                for n, o in enumerate(cl.result_list)
+            },
+            **{
+                f"form-{n}-recipient_phone_number": getattr(
+                    o, "recipient_phone_number", None
+                )
+                for n, o in enumerate(cl.result_list)
+            },
+            **{
+                f"form-{n}-online_id": getattr(o, "online_id", None)
                 for n, o in enumerate(cl.result_list)
             },
         },

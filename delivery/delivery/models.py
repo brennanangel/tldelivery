@@ -1,9 +1,11 @@
+import os
 import datetime
 import pytz
-from typing import Optional
+from typing import Optional, Dict
 import phonenumbers
 from django.contrib import admin
 from django.db import models
+from django.conf import settings
 from django.core.cache import cache
 from django.utils.safestring import mark_safe
 from django.utils.html import format_html
@@ -200,6 +202,10 @@ class Delivery(models.Model):
         max_length=10,
     )
     notes = models.TextField(blank=True, null=True)
+    online_id = models.CharField(blank=True, null=True, max_length=20)
+    delivery_type = models.IntegerField(
+        choices=((1, "White Glove"), (2, "Curbside")), default=1
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -233,6 +239,19 @@ class Delivery(models.Model):
 
     short_notes.description = "Notes"
 
+    def online_order_link(self):
+        if self.online_id is None:
+            return None
+        return mark_safe(
+            format_html(
+                '<a href="{base}/{online_id}" target="_blank">view</a>',
+                base=os.path.join(settings.SHOPIFY_APP_URL, "admin", "orders"),
+                online_id=self.online_id,
+            )
+        )
+
+    online_order_link.short_description = "Shopify Order"
+
     def _load_clover_items(self, order_data):
         if not order_data.get("lineItems", None):
             return
@@ -240,7 +259,7 @@ class Delivery(models.Model):
             return
         items = order_data["lineItems"]["elements"]
         current_items = [i.item_name for i in self.item_set.all()]
-        item_dict = {}
+        item_dict: Dict[str, int] = {}
         for item in items:
             if item["refunded"]:
                 continue
@@ -275,6 +294,7 @@ class Delivery(models.Model):
         customer = customers[0]
         self.recipient_last_name = customer.get("lastName")
         self.recipient_first_name = customer.get("firstName")
+        # get customer data from Clover
         if customer["href"]:
             customer_data = request_clover_customer(customer["id"])
             self.recipient_last_name = self.recipient_last_name or customer_data.get(
@@ -283,6 +303,8 @@ class Delivery(models.Model):
             self.recipient_first_name = self.recipient_first_name or customer_data.get(
                 "firstName", None
             )
+            #
+            # get address data
             if customer_data["addresses"] and customer_data["addresses"]["elements"]:
                 try:
                     # first look for best address
@@ -297,8 +319,11 @@ class Delivery(models.Model):
                 self.address_line_2 = address.get("address2")
                 self.address_city = address["city"]
                 self.address_postal_code = address["zip"]
+            #
+            # get phone numbers
             if (
-                customer_data["phoneNumbers"]
+                self.recipient_phone_number is None
+                and customer_data["phoneNumbers"]
                 and customer_data["phoneNumbers"]["elements"]
             ):
                 try:
@@ -311,6 +336,7 @@ class Delivery(models.Model):
                 except StopIteration:
                     phone_number = customer_data["phoneNumbers"]["elements"][0]
                 self.recipient_phone_number = phone_number["phoneNumber"]
+            # get email address
             if (
                 customer_data["emailAddresses"]
                 and customer_data["emailAddresses"]["elements"]
