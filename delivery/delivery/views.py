@@ -2,6 +2,7 @@
 import traceback
 import datetime
 import re
+from urllib.parse import urlencode
 from typing import Dict
 from distutils.util import strtobool
 from dateutil.parser import parse
@@ -174,6 +175,7 @@ class NewOrderAdmin(DeliveryAdmin):
     list_editable = [
         "delivery_shift",
         "order_number",
+        "delivery_type",
         "online_id",
         "recipient_phone_number",
     ]
@@ -184,6 +186,7 @@ class NewOrderAdmin(DeliveryAdmin):
         "online_order_link",
         "notes",
         "delivery_shift",
+        "delivery_type",
         "action",
         "recipient_phone_number",
         "online_id",
@@ -205,7 +208,7 @@ class NewOrderAdmin(DeliveryAdmin):
         }
 
     def action(self, obj):
-        classes = ["btn"]
+        classes = ["button"]
         target = "_blank"
         popup = True
         if popup:
@@ -219,12 +222,12 @@ class NewOrderAdmin(DeliveryAdmin):
             )
         else:
             text = "Save As"
-            classes.append("btn-primary")
-            url = (
-                f'{reverse(f"admin:{self.model._meta.app_label}_{self.model._meta.model_name}_add")}'
-                f"?order_number={obj.order_number}"
-                f'{"&_popup=1" if popup else ""}'
-            )
+            params = {"order_number": obj.order_number}
+            if popup:
+                params["popup"] = 1
+            if obj.delivery_shift_id:
+                params["delivery_shift_id"] = obj.delivery_shift_id
+            url = f'{reverse(f"admin:{self.model._meta.app_label}_{self.model._meta.model_name}_add")}?{urlencode(params)}'
 
         return mark_safe(
             "<a "
@@ -341,6 +344,10 @@ def NewOrderView(request):
             },
             **{
                 f"form-{n}-online_id": getattr(o, "online_id", None)
+                for n, o in enumerate(cl.result_list)
+            },
+            **{
+                f"form-{n}-delivery_type": getattr(o, "delivery_type", None)
                 for n, o in enumerate(cl.result_list)
             },
         },

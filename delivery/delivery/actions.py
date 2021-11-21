@@ -1,7 +1,7 @@
 import datetime
 import json
 from os import path
-from typing import Optional, Set
+from typing import Set
 import requests
 from django.conf import settings
 from django.db.models.functions import Upper
@@ -9,7 +9,7 @@ from django.db.models.functions import Upper
 from .models import Delivery
 from .clover import (
     request_clover_orders,
-    is_clover_delivery,
+    get_delivery_type,
     request_clover_customer_list,
     parse_shopify_order_number,
 )
@@ -117,9 +117,7 @@ def search_clover_orders(start_date, include_processed=False, end_date=None):
         orders = orders_data.get("elements", None)
         if not orders:
             break
-        delivery_orders.extend(
-            list(filter(is_clover_delivery, orders_data["elements"]))
-        )
+        delivery_orders.extend(list(filter(get_delivery_type, orders_data["elements"])))
         if len(orders) < chunk_size:
             break
         offset += chunk_size
@@ -174,6 +172,7 @@ def search_clover_orders(start_date, include_processed=False, end_date=None):
             )
             delivery.online_id = online_id
             delivery.recipient_phone_number = phone
+            delivery.delivery_type = get_delivery_type(o)
             orders.append(delivery)
 
     orders.sort(key=lambda o: o.created_at, reverse=True)

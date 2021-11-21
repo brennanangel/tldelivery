@@ -3,7 +3,6 @@ import datetime
 import pytz
 from typing import Optional, Dict
 import phonenumbers
-from django.contrib import admin
 from django.db import models
 from django.conf import settings
 from django.core.cache import cache
@@ -16,8 +15,7 @@ from delivery.delivery.clover import (
     is_clover_delivery_item,
 )
 from django.template.defaultfilters import truncatechars  # or truncatewords
-
-# Create your models here.
+from delivery.delivery.constants import DeliveryTypes
 
 
 class Shift(models.Model):
@@ -204,7 +202,11 @@ class Delivery(models.Model):
     notes = models.TextField(blank=True, null=True)
     online_id = models.CharField(blank=True, null=True, max_length=20)
     delivery_type = models.IntegerField(
-        choices=((1, "White Glove"), (2, "Curbside")), default=1
+        choices=(
+            (DeliveryTypes.WHITE_GLOVE, "White Glove"),
+            (DeliveryTypes.CURBSIDE, "Curbside"),
+        ),
+        default=DeliveryTypes.WHITE_GLOVE,
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

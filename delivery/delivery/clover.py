@@ -4,6 +4,7 @@ from typing import Sequence, Optional
 import requests
 from django.conf import settings
 from django.core.cache import cache
+from delivery.delivery.constants import DELIVERY_TYPE_COSTS, DeliveryTypes
 
 
 def request_clover(url, params):
@@ -107,17 +108,17 @@ def is_clover_delivery_item(item_name):
     )
 
 
-def is_clover_delivery(order_info):
+def get_delivery_type(order_info) -> Optional[DeliveryTypes]:
     if (
         "lineItems" not in order_info
         or "elements" not in order_info["lineItems"]
         or not order_info["lineItems"]["elements"]
     ):
-        return False
+        return None
     for item in order_info["lineItems"]["elements"]:
         if is_clover_delivery_item(item["name"]):
-            return True
-    return False
+            return DELIVERY_TYPE_COSTS.get(item["price"])
+    return None
 
 
 _SHOPIFY_TITLE_PATTERN = re.compile(
