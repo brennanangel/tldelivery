@@ -130,7 +130,6 @@ class DeliveryAdmin(admin.ModelAdmin):
         "order_number",
         "recipient_last_name",
         "recipient_phone_number",
-        "recipient_phone_number_formatted",
         "recipient_first_name",
     ]
     readonly_fields = [
