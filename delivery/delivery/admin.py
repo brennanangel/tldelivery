@@ -81,7 +81,7 @@ class ShiftAdmin(admin.ModelAdmin):
         "date",
         "time",
     )
-    actions = [export_as_csv]
+    actions = [export_as_csv]  # type: ignore
 
     inlines = [DeliveryInline]
 
@@ -173,11 +173,12 @@ class DeliveryAdmin(admin.ModelAdmin):
                 "fields": (
                     "delivery_type",
                     "notes",
+                    "online_id",
                 )
             },
         ),
     )
-    actions = [export_as_csv]
+    actions = [export_as_csv]  # type: ignore
     inlines = [ItemInline]
 
     def response_change(self, request, obj):
