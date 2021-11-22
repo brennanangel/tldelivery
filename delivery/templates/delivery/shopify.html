@@ -1,0 +1,35 @@
+{% if orders %}
+<h1>Unprocessed Orders</h1>
+<div>
+  Orders that exist in Shopify without a matching order in the scheduling tool
+</div>
+<table>
+  <thead>
+    <th>Created Time</th>
+    <th>First Name</th>
+    <th>Last Name</th>
+    <th>Shift</th>
+    <th>Online ID</th>
+    <th>Link</th>
+  </thead>
+  <tbody>
+    {% for order in orders %}
+    <tr>
+      <td>{{order.created_at}}</td>
+      <td>{{order.first_name}}</td>
+      <td>{{order.last_name}}</td>
+      <td>{{order.shift}}</td>
+      <td>{{order.online_id}}</td>
+      <td>
+        <a href="{{shopify_orders_url}}/{{order.online_id}}" target="_blank"
+          >link</a
+        >
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% else %}
+<h1>All Shopify orders processed</h1>
+{% endif %}

@@ -7,6 +7,7 @@ from .views import (
     CreateOnfleetOrderView,
     CreateOnfleetShiftView,
     OnfleetTruckView,
+    ShopifyReconciliationView,
     NewOrderView,
 )
 
@@ -16,5 +17,6 @@ urlpatterns = [
     path("deliveries/<int:pk>/sheet", OrderDetailView.as_view(), name="order-sheet"),
     path("deliveries/<int:pk>/onfleet", CreateOnfleetOrderView, name="onfleet-order"),
     path("trucks", OnfleetTruckView, name="truck_view"),
+    path("deliveries/shopify", ShopifyReconciliationView, name="shopify_view"),
     path("orders/new", admin.site.admin_view(NewOrderView), name="new_orders"),
 ]

@@ -2,11 +2,13 @@
 import traceback
 import datetime
 import re
+import os
 from urllib.parse import urlencode
 from typing import Dict
 from distutils.util import strtobool
 from dateutil.parser import parse
 from django.views.generic.detail import DetailView
+from django.conf import settings
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.admin import SimpleListFilter, site as admin_site
 from django.http import HttpResponse, HttpResponseNotFound
@@ -28,6 +30,10 @@ from .actions import (
     create_onfleet_tasks_from_shift,
     get_onfleet_trucks,
     search_clover_orders,
+)
+from .shopify import (
+    get_data_by_time_range as get_shopify_data_by_time_range,
+    ShopifyOrderInfo,
 )
 from .admin import DeliveryAdmin
 
@@ -91,6 +97,39 @@ def OnfleetTruckView(request):
             "teams": teams,
             "workers": workers,
             "tasks": tasks,
+        },
+    )
+
+
+@login_required
+def ShopifyReconciliationView(request):
+    def _is_existing(o: ShopifyOrderInfo) -> bool:
+        try:
+            Delivery.objects.get(online_id=o.online_id)
+            return True
+        except Delivery.DoesNotExist:
+            pass
+        try:
+            Delivery.objects.get(
+                recipient_first_name=o.first_name.strip() if o.first_name else None,
+                recipient_last_name=o.last_name.strip() if o.last_name else None,
+                delivery_shift_id=o.shift.id if o.shift else None,
+            )
+            return True
+        except Delivery.DoesNotExist:
+            pass
+        return False
+
+    orders = get_shopify_data_by_time_range(delivery_only=True)
+    missing_orders = [o for o in orders if not _is_existing(o)]
+    return render(
+        request,
+        "delivery/shopify.html",
+        {
+            "orders": missing_orders,
+            "shopify_orders_url": os.path.join(
+                settings.SHOPIFY_APP_URL, "admin", "orders"
+            ),
         },
     )
 
@@ -284,11 +323,13 @@ def NewOrderView(request):
             else:
                 recipient_phone_number = obj["recipient_phone_number"] or None
                 online_id = obj["online_id"] or None
+                delivery_type = obj["delivery_type"] or None
                 delivery = Delivery(
                     order_number=order_number,
                     delivery_shift_id=delivery_shift_id,
                     recipient_phone_number=recipient_phone_number,
                     online_id=online_id,
+                    delivery_type=delivery_type,
                 )
                 delivery.sync()
             delivery.save()
