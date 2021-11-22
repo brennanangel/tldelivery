@@ -117,7 +117,7 @@ def get_delivery_type(order_info) -> Optional[DeliveryTypes]:
         return None
     for item in order_info["lineItems"]["elements"]:
         if is_clover_delivery_item(item["name"]):
-            return DELIVERY_TYPE_COSTS.get(item["price"])
+            return DELIVERY_TYPE_COSTS.get(item["price"], DeliveryTypes.WHITE_GLOVE)
     return None
 
 
