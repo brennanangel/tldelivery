@@ -13,9 +13,10 @@ from delivery.delivery.clover import (
     request_clover_orders,
     request_clover_customer,
     is_clover_delivery_item,
+    get_delivery_type as get_delivery_type_for_clover,
 )
 from django.template.defaultfilters import truncatechars  # or truncatewords
-from delivery.delivery.constants import DeliveryTypes
+from delivery.delivery.constants import DeliveryTypes, DELIVERY_TYPE_COSTS
 
 
 class Shift(models.Model):
@@ -143,8 +144,19 @@ class Shift(models.Model):
         unique_together = (("date", "time"),)
 
 
+# dirty hack import this here to avoid initialization error
+# due to circular dependency with delivery.delivery.shopify
+from delivery.delivery.shopify import (
+    ShopifyOrderInfo,
+    get_data_by_id,
+    parse_order_info_from_data as parse_shopify_order_info_from_data,
+    parse_delivery_type_from_data as parse_delivery_type_from_shopify_data,
+)
+
+
 class Delivery(models.Model):
     order_number = models.CharField(
+        verbose_name="clover order number",
         blank=True,
         null=True,
         max_length=20,
@@ -200,7 +212,9 @@ class Delivery(models.Model):
         max_length=10,
     )
     notes = models.TextField(blank=True, null=True)
-    online_id = models.CharField(blank=True, null=True, max_length=20)
+    online_id = models.CharField(
+        verbose_name="shopify id", blank=True, null=True, max_length=20
+    )
     delivery_type = models.IntegerField(
         choices=(
             (DeliveryTypes.WHITE_GLOVE, "White Glove"),
@@ -254,6 +268,9 @@ class Delivery(models.Model):
 
     online_order_link.short_description = "Shopify Order"
 
+    #
+    # CLOVER sync
+    #
     def _load_clover_items(self, order_data):
         if not order_data.get("lineItems", None):
             return
@@ -361,7 +378,10 @@ class Delivery(models.Model):
         self.created_at = (
             datetime.datetime.fromtimestamp(clover_created_time / 1000, tz=pytz.UTC)
             if clover_created_time
-            else None
+            else datetime.datetime.now()
+        )
+        self.delivery_type = (
+            get_delivery_type_for_clover(order_data) or DeliveryTypes.WHITE_GLOVE
         )
         if not skip_items:
             self._load_clover_items(order_data)
@@ -369,29 +389,100 @@ class Delivery(models.Model):
 
     @classmethod
     def create_from_clover(
-        cls, order_data, delivery_shift: Optional[Shift] = None, skip_items=False
-    ):
+        cls,
+        order_data,
+        delivery_shift: Optional[Shift] = None,
+        skip_items: bool = False,
+    ) -> "Delivery":
         order_number = order_data["id"]
         if not order_number:
             raise ValueError("No order number found in payload")
-        d = cls(order_number=order_number, delivery_shift=delivery_shift)
-        d.load_from_clover(order_data, skip_items=skip_items)
-        return d
+        instance = cls(order_number=order_number, delivery_shift=delivery_shift)
+        instance.load_from_clover(order_data, skip_items=skip_items)
+        return instance
 
+    #
+    # Shopify
+    #
+    def _load_line_items_from_shopify(self, order_data) -> None:
+        # for now, skip sync if we have existing items
+        if self.item_set.count():
+            return
+        # for now, skip if the order data doesn't have items (vs. error)
+        try:
+            items = [o["node"] for o in order_data["lineItems"]["edges"]]
+        except KeyError:
+            return
+        for item in items:
+            self.item_set.create(item_name=item["name"], quantity=item["quantity"])
+
+    def load_from_shopify_info(self, info: ShopifyOrderInfo) -> None:
+        if not self.recipient_phone_number:
+            self.recipient_phone_number = info.phone
+        if not self.recipient_first_name:
+            self.recipient_first_name = info.first_name
+        if not self.recipient_last_name:
+            self.recipient_last_name = info.last_name
+        if not self.created_at:
+            self.created_at = info.created_at or datetime.datetime.now()
+        if not hasattr(self, "delivery_shift") and info.shift:
+            self.delivery_shift = info.shift
+
+    def load_from_shopify(self, order_data) -> None:
+        info = parse_shopify_order_info_from_data(order_data)
+        self.load_from_shopify_info(info)
+        # online_id aready set
+
+        if order_data["note"]:
+            if self.notes is None:
+                self.notes = order_data["note"]
+            elif order_data["note"] not in self.notes:
+                self.notes += f"\n\n{order_data['note']}"
+        if order_data["customer"]["lastName"] != self.recipient_last_name:
+            notestr = f"Ordered by {order_data['customer']['firstName']} {order_data['customer']['lastName']} ({order_data['customer']['phone'] or 'No Phone Provided'})"
+            if self.notes and notestr not in self.notes:
+                self.notes += f"\n\n{notestr}"
+            elif not self.notes:
+                self.notes = notestr
+
+        shipping_address = order_data["shippingAddress"]
+        if not self.address_line_1:
+            self.address_line_1 = shipping_address["address1"]
+        if not self.address_line_2:
+            self.address_line_2 = shipping_address["address2"]
+        if not self.address_city:
+            self.address_city = shipping_address["city"]
+        if not self.address_postal_code:
+            self.address_postal_code = shipping_address["zip"]
+
+        self.delivery_type = (
+            parse_delivery_type_from_shopify_data(order_data)
+            or DeliveryTypes.WHITE_GLOVE
+        )
+        self._load_line_items_from_shopify(order_data)
+
+    #
+    # General Sync
+    #
     def sync(self):
         if not self.order_number:
             raise ValueError("Order number required to sync.")
 
-        order_data = request_clover_orders(order_number=self.order_number)
+        if self.online_id:
+            order_data = get_data_by_id(self.online_id)
+            self.load_from_shopify(order_data)
 
-        # save if not yet
-        if not self.pk:
-            self.save()
+        else:
+            order_data = request_clover_orders(order_number=self.order_number)
+            self.load_from_clover(order_data)
 
-        self.load_from_clover(order_data)
-
+    #
+    # OnFleet
+    #
     def serialize_for_onfleet(self):
-        notes = "Order Number: {}\nItems:".format(self.order_number)
+        notes = f"Order Number: {self.order_number}\n"
+        notes += f"{self.get_delivery_type_display()}\n"
+        notes += "Items:"
         if self.item_set.count() < 1:
             notes += "\n    No Items Found"
         else:
@@ -462,14 +553,19 @@ class Delivery(models.Model):
         }
 
     def sync_button(self):
+        if not self.id:
+            return "[save record first]"
         return mark_safe(
             format_html(
-                '<button class="button button-primary sync-button" name="_sync" data-order-id="{order_number}">Sync with Clover</button>',
+                '<button class="button button-primary sync-button" name="_sync" data-order-id="{order_number}" {disabled} title="{title}">Sync with {target}</button>',
                 order_number=self.order_number,
+                disabled="",
+                title="",
+                target="Shopify" if self.online_id else "Clover",
             )
         )
 
-    sync_button.short_description = "Sync Order from Clover"
+    sync_button.short_description = "Sync Order"
     sync_button.allow_tags = True
 
     def push_button(self):

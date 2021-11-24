@@ -1,6 +1,6 @@
 import datetime
 import csv
-from typing import List, Callable
+from typing import List
 from django.contrib import admin, messages
 from django.urls import reverse
 
@@ -136,10 +136,11 @@ class DeliveryAdmin(admin.ModelAdmin):
         "sync_button",
         "generate_delivery_sheet",
         "push_button",
+        "online_order_link",
     ]
     list_editable = ["delivery_shift"]
     fieldsets = (
-        ("Main", {"fields": ("order_number", "delivery_shift")}),
+        ("Main", {"fields": ("delivery_shift", "order_number", "online_id")}),
         (
             "Actions",
             {"fields": ("sync_button", "generate_delivery_sheet", "push_button")},
@@ -159,6 +160,7 @@ class DeliveryAdmin(admin.ModelAdmin):
             "Address",
             {
                 "fields": (
+                    "delivery_type",
                     "address_name",
                     "address_line_1",
                     "address_line_2",
@@ -169,16 +171,12 @@ class DeliveryAdmin(admin.ModelAdmin):
         ),
         (
             "Other",
-            {
-                "fields": (
-                    "delivery_type",
-                    "notes",
-                    "online_id",
-                )
-            },
+            {"fields": ("notes", "online_order_link")},
         ),
     )
     actions = [export_as_csv]  # type: ignore
+    actions_on_top = True
+    save_on_top = True
     inlines = [ItemInline]
 
     def response_change(self, request, obj):

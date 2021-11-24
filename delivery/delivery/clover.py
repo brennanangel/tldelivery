@@ -1,6 +1,7 @@
+import datetime
 from os import path
 import re
-from typing import Sequence, Optional
+from typing import Sequence, Optional, Union, Dict
 import requests
 from django.conf import settings
 from django.core.cache import cache
@@ -51,6 +52,37 @@ def request_clover_orders(order_number=None, filters=None, offset=None, limit=No
         order_response.raise_for_status()
 
     return order_response.json()
+
+
+def search_clover_by_dates(
+    start_date: Union[datetime.datetime, datetime.date],
+    end_date: Optional[Union[datetime.datetime, datetime.date]] = None,
+    chunk_size: int = 1000,
+) -> Sequence[Dict]:
+    end_date = end_date or start_date
+
+    start_time = datetime.datetime.combine(start_date, datetime.datetime.min.time())
+    end_time = datetime.datetime.combine(end_date, datetime.datetime.max.time())
+    filters = [
+        f"createdTime>={int(start_time.timestamp()) * 1000}",
+        f"createdTime<={int(end_time.timestamp()) * 1000}",
+    ]
+    orders_list = []
+    offset = 0
+
+    while True:
+        orders_data = request_clover_orders(
+            filters=filters, limit=chunk_size, offset=offset
+        )
+        orders = orders_data.get("elements", None)
+        if not orders:
+            break
+        orders_list.extend(orders)
+        if len(orders) < chunk_size:
+            break
+        offset += chunk_size
+
+    return orders_list
 
 
 def _customer_cache_key(id: str) -> str:

@@ -16,7 +16,9 @@ class Command(BaseCommand):
         else:
             date = datetime.date.today()
 
-        orders = search_clover_orders(date, options["include_processed"])
+        orders = search_clover_orders(
+            date, include_processed=options["include_processed"]
+        )
         if not orders:
             self.stdout.write(self.style.WARNING("No orders found"))
             return
