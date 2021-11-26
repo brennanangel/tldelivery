@@ -254,6 +254,7 @@ class NewOrderAdmin(DeliveryAdmin):
         "created_at",
         "order_number",
         "recipient_name",
+        "recipient_phone_number_formatted",
         "online_order_link",
         "delivery_shift",
         "action",
@@ -299,6 +300,8 @@ class NewOrderAdmin(DeliveryAdmin):
                 params["delivery_shift"] = obj.delivery_shift_id
             if obj.online_id:
                 params["online_id"] = obj.online_id
+            if obj.recipient_phone_number:
+                params["recipient_phone_number"] = obj.recipient_phone_number
             url = f'{reverse(f"admin:{self.model._meta.app_label}_{self.model._meta.model_name}_add")}?{urlencode(params)}'
 
         return mark_safe(
