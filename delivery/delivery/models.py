@@ -3,12 +3,15 @@ import datetime
 import pytz
 from typing import Optional, Dict
 import phonenumbers
+
 from django.db import models
 from django.conf import settings
 from django.core.cache import cache
 from django.utils.safestring import mark_safe
 from django.utils.html import format_html
 from django.urls import reverse
+import dateutil.parser
+
 from delivery.delivery.clover import (
     request_clover_orders,
     request_clover_customer,
@@ -424,7 +427,11 @@ class Delivery(models.Model):
         if not self.recipient_last_name:
             self.recipient_last_name = info.last_name
         if not self.created_at:
-            self.created_at = info.created_at or datetime.datetime.now()
+            self.created_at = (
+                dateutil.parser.parse(info.created_at)
+                if info.created_at
+                else datetime.datetime.now()
+            )
         if not hasattr(self, "delivery_shift") and info.shift:
             self.delivery_shift = info.shift
 
