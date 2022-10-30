@@ -269,8 +269,6 @@ tags
 
 ### Project template
 
-delivery/media/
-
 .pytest_cache/
 
 ### Secrets
