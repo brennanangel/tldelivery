@@ -73,7 +73,11 @@ def get_onfleet_trucks():
         path.join(settings.ONFLEET_INTEGRATION_API, "workers"),
         auth=requests.auth.HTTPBasicAuth(settings.ONFLEET_API_KEY, None),
     )
-    workers = {x["id"]: x for x in response.json() if len(x["tasks"])}
+    content = response.json()
+    if 'message' in content and 'error' in content['message']:
+        raise Exception(content['message']['message'])
+
+    workers = {x["id"]: x for x in content if len(x["tasks"])}
     response = requests.get(
         path.join(settings.ONFLEET_INTEGRATION_API, "teams"),
         auth=requests.auth.HTTPBasicAuth(settings.ONFLEET_API_KEY, None),
