@@ -400,6 +400,7 @@ def NewOrderView(request):
         model_admin.list_editable,
         model_admin,
         model_admin.sortable_by,
+        "Search for new orders",  # search help text
     )
 
     cl.formset = FormSet(  # pylint: disable=attribute-defined-outside-init

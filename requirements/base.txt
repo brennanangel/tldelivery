@@ -18,7 +18,7 @@ django-redis==5.0.0  # https://github.com/jazzband/django-redis
 # Local
 # -------------------------------------
 phonenumberslite==8.12.36
-django-admin-interface==0.17.3
+django-admin-interface==0.22.2
 ShopifyAPI==9.0.0
 python-dateutil==2.8.2
 django-phonenumber-field[phonenumberslite]==7.0.0
