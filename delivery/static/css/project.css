@@ -16,6 +16,11 @@
   text-align: center;
 }
 
+.results td,
+.results th {
+  vertical-align: middle;
+}
+
 #progress-modal {
   position: relative;
   background: #fff;

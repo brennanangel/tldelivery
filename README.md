@@ -27,4 +27,3 @@ The app lives on Google Cloud's App Engine. Copy all of the relevant secrets to 
 - Media management cleanup
 - Test runner environment variables
 - Skip canceled orders in Shopify
-- Ensure items flow through from Shopify orders list
