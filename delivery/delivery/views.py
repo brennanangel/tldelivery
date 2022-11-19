@@ -22,7 +22,7 @@ from django.template.response import TemplateResponse
 from django.core.paginator import Paginator
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.db.models.functions import Upper
 
 
@@ -203,7 +203,7 @@ class NewOrderProcessedFilter(SimpleListFilter):
         # remove first "All" option
         for lookup, title in self.lookup_choices:
             yield {
-                "selected": self.value() == force_text(lookup),
+                "selected": self.value() == force_str(lookup),
                 "query_string": changelist.get_query_string(
                     {self.parameter_name: lookup}, []
                 ),
