@@ -161,6 +161,8 @@ from delivery.delivery.shopify import (
 
 
 DUPLICATE_PHONE_MESSAGE = "Phone numbers must be unqiue, or it will be a problem for Onfleet. If you have two legitimate deliveries with the same phone number, the easiest workaround is to set one of them to a random number such as 201-111-1111 and put the real number in the notes."
+
+
 class Delivery(models.Model):
     order_number = models.CharField(
         verbose_name="clover order number",
@@ -190,7 +192,7 @@ class Delivery(models.Model):
         max_length=255,
         unique=True,
         region="US",
-        error_messages={'unique': DUPLICATE_PHONE_MESSAGE}
+        error_messages={"unique": DUPLICATE_PHONE_MESSAGE},
     )
     recipient_email = models.CharField(
         blank=True,
@@ -250,7 +252,9 @@ class Delivery(models.Model):
 
     @property
     def recipient_phone_number_formatted(self):
-        return phonenumbers.format_number(self.recipient_phone_number, phonenumbers.PhoneNumberFormat.NATIONAL)
+        return phonenumbers.format_number(
+            self.recipient_phone_number, phonenumbers.PhoneNumberFormat.NATIONAL
+        )
 
     def short_notes(self) -> Optional[str]:
         if not self.notes:

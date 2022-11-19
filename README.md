@@ -23,7 +23,6 @@ The app lives on Google Cloud's App Engine. Copy all of the relevant secrets to 
 ## Todo
 
 - Better environment management w/ App Engine
-- Fix autoformatting
 - Update Cloud SQL to use DNS instead of IP
 - Media management cleanup
 - Test runner environment variables

@@ -6,18 +6,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('delivery', '0005_item_is_pulled'),
+        ("delivery", "0005_item_is_pulled"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='delivery',
-            name='delivery_type',
-            field=models.IntegerField(choices=[(1, 'White Glove'), (2, 'Curbside')], default=1),
+            model_name="delivery",
+            name="delivery_type",
+            field=models.IntegerField(
+                choices=[(1, "White Glove"), (2, "Curbside")], default=1
+            ),
         ),
         migrations.AddField(
-            model_name='delivery',
-            name='online_id',
+            model_name="delivery",
+            name="online_id",
             field=models.CharField(blank=True, max_length=20, null=True),
         ),
     ]

@@ -7,13 +7,15 @@ import phonenumber_field.modelfields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('delivery', '0007_alter_delivery_online_id_alter_delivery_order_number'),
+        ("delivery", "0007_alter_delivery_online_id_alter_delivery_order_number"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='delivery',
-            name='recipient_phone_number',
-            field=phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=255, null=True, region='US', unique=True),
+            model_name="delivery",
+            name="recipient_phone_number",
+            field=phonenumber_field.modelfields.PhoneNumberField(
+                blank=True, max_length=255, null=True, region="US", unique=True
+            ),
         ),
     ]

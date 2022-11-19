@@ -6,18 +6,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('delivery', '0006_auto_20211119_2049'),
+        ("delivery", "0006_auto_20211119_2049"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='delivery',
-            name='online_id',
-            field=models.CharField(blank=True, max_length=20, null=True, verbose_name='shopify id'),
+            model_name="delivery",
+            name="online_id",
+            field=models.CharField(
+                blank=True, max_length=20, null=True, verbose_name="shopify id"
+            ),
         ),
         migrations.AlterField(
-            model_name='delivery',
-            name='order_number',
-            field=models.CharField(blank=True, max_length=20, null=True, unique=True, verbose_name='clover order number'),
+            model_name="delivery",
+            name="order_number",
+            field=models.CharField(
+                blank=True,
+                max_length=20,
+                null=True,
+                unique=True,
+                verbose_name="clover order number",
+            ),
         ),
     ]

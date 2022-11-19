@@ -74,8 +74,8 @@ def get_onfleet_trucks():
         auth=requests.auth.HTTPBasicAuth(settings.ONFLEET_API_KEY, None),
     )
     content = response.json()
-    if 'message' in content and 'error' in content['message']:
-        raise Exception(content['message']['message'])
+    if "message" in content and "error" in content["message"]:
+        raise Exception(content["message"]["message"])
 
     workers = {x["id"]: x for x in content if len(x["tasks"])}
     response = requests.get(
