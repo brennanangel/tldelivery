@@ -25,3 +25,7 @@ The app lives on Google Cloud's App Engine. Copy all of the relevant secrets to 
 - Better environment management w/ App Engine
 - Fix autoformatting
 - Update Cloud SQL to use DNS instead of IP
+- Media management cleanup
+- Test runner environment variables
+- Skip canceled orders in Shopify
+- Ensure items flow through from Shopify orders list

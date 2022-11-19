@@ -7,10 +7,13 @@ import phonenumbers
 from django.db import models
 from django.conf import settings
 from django.core.cache import cache
+from django.template.defaultfilters import truncatechars  # or truncatewords
 from django.utils.safestring import mark_safe
 from django.utils.html import format_html
 from django.urls import reverse
 import dateutil.parser
+
+from phonenumber_field.modelfields import PhoneNumberField
 
 from delivery.delivery.clover import (
     request_clover_orders,
@@ -18,7 +21,7 @@ from delivery.delivery.clover import (
     is_clover_delivery_item,
     get_delivery_type as get_delivery_type_for_clover,
 )
-from django.template.defaultfilters import truncatechars  # or truncatewords
+
 from delivery.delivery.constants import DeliveryTypes, DELIVERY_TYPE_COSTS
 
 
@@ -157,6 +160,7 @@ from delivery.delivery.shopify import (
 )
 
 
+DUPLICATE_PHONE_MESSAGE = "Phone numbers must be unqiue, or it will be a problem for Onfleet. If you have two legitimate deliveries with the same phone number, the easiest workaround is to set one of them to a random number such as 201-111-1111 and put the real number in the notes."
 class Delivery(models.Model):
     order_number = models.CharField(
         verbose_name="clover order number",
@@ -180,11 +184,13 @@ class Delivery(models.Model):
         null=True,
         max_length=40,
     )
-    recipient_phone_number = models.CharField(
+    recipient_phone_number = PhoneNumberField(
         blank=True,
         null=True,
         max_length=255,
         unique=True,
+        region="US",
+        error_messages={'unique': DUPLICATE_PHONE_MESSAGE}
     )
     recipient_email = models.CharField(
         blank=True,
@@ -244,12 +250,7 @@ class Delivery(models.Model):
 
     @property
     def recipient_phone_number_formatted(self):
-        if not self.recipient_phone_number:
-            return None
-        return phonenumbers.format_number(
-            phonenumbers.parse(self.recipient_phone_number, "US"),
-            phonenumbers.PhoneNumberFormat.E164,
-        )
+        return phonenumbers.format_number(self.recipient_phone_number, phonenumbers.PhoneNumberFormat.NATIONAL)
 
     def short_notes(self) -> Optional[str]:
         if not self.notes:
