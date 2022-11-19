@@ -12,7 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         deliveries = Delivery.objects.all()
         for delivery in deliveries:
-            if id != 148:
+            if delivery.id != 146:
                 continue
             delivery.sync()
             delivery.save()
