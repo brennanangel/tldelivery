@@ -1,8 +1,10 @@
 import csv
 from datetime import datetime
-from django.core.management.base import BaseCommand
-from delivery.delivery.models import Shift, Delivery, Item
+
 import phonenumbers
+from django.core.management.base import BaseCommand
+
+from delivery.delivery.models import Delivery, Item, Shift
 
 
 class Command(BaseCommand):

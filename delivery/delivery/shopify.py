@@ -1,17 +1,14 @@
-import shopify
+import datetime
 import json
 import os
-import datetime
 from dataclasses import dataclass
-
-from typing import Sequence, Optional, Mapping, Dict
+from typing import Dict, Mapping, Optional, Sequence
 
 import dateutil.parser
-
+import shopify
 from django.conf import settings
-from django.core.cache import cache
 
-from delivery.delivery.constants import DeliveryTypes, DELIVERY_TYPE_COSTS
+from delivery.delivery.constants import DELIVERY_TYPE_COSTS, DeliveryTypes
 
 from .models import Shift
 

@@ -1,22 +1,17 @@
-import datetime
 import csv
+import datetime
 from typing import List
+
 from django.contrib import admin, messages
+from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
+from django.contrib.admin.utils import quote
+from django.db.models.query import QuerySet
+from django.forms import ModelForm
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 
-from django.http import HttpResponseRedirect, HttpResponse, HttpRequest
-from django.db.models.query import QuerySet
-from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
-from django.forms import ModelForm
-from django.contrib.admin.utils import quote
-
-
-from .models import (
-    Shift,
-    Delivery,
-    Item,
-)
 from .actions import create_onfleet_task_from_order
+from .models import Delivery, Item, Shift
 
 
 def export_as_csv(

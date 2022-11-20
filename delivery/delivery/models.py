@@ -1,28 +1,26 @@
-import os
 import datetime
-import pytz
-from typing import Optional, Dict
-import phonenumbers
+import os
+from typing import Dict, Optional
 
-from django.db import models
+import dateutil.parser
+import phonenumbers
+import pytz
 from django.conf import settings
 from django.core.cache import cache
+from django.db import models
 from django.template.defaultfilters import truncatechars  # or truncatewords
-from django.utils.safestring import mark_safe
-from django.utils.html import format_html
 from django.urls import reverse
-import dateutil.parser
-
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from phonenumber_field.modelfields import PhoneNumberField
 
+from delivery.delivery.clover import get_delivery_type as get_delivery_type_for_clover
 from delivery.delivery.clover import (
-    request_clover_orders,
-    request_clover_customer,
     is_clover_delivery_item,
-    get_delivery_type as get_delivery_type_for_clover,
+    request_clover_customer,
+    request_clover_orders,
 )
-
-from delivery.delivery.constants import DeliveryTypes, DELIVERY_TYPE_COSTS
+from delivery.delivery.constants import DeliveryTypes
 
 
 class Shift(models.Model):
@@ -152,13 +150,13 @@ class Shift(models.Model):
 
 # dirty hack import this here to avoid initialization error
 # due to circular dependency with delivery.delivery.shopify
+from delivery.delivery.shopify import ShopifyOrderInfo, get_data_by_id
 from delivery.delivery.shopify import (
-    ShopifyOrderInfo,
-    get_data_by_id,
-    parse_order_info_from_data as parse_shopify_order_info_from_data,
     parse_delivery_type_from_data as parse_delivery_type_from_shopify_data,
 )
-
+from delivery.delivery.shopify import (
+    parse_order_info_from_data as parse_shopify_order_info_from_data,
+)
 
 DUPLICATE_PHONE_MESSAGE = "Phone numbers must be unqiue, or it will be a problem for Onfleet. If you have two legitimate deliveries with the same phone number, the easiest workaround is to set one of them to a random number such as 201-111-1111 and put the real number in the notes."
 

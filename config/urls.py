@@ -6,7 +6,9 @@ from django.urls import include, path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView
 
-admin.site.site_header = "Guardsmen Tree Lot Delivery Desk"  # not used (set in admin panel)
+admin.site.site_header = (
+    "Guardsmen Tree Lot Delivery Desk"  # not used (set in admin panel)
+)
 admin.site.site_title = "Scheduler"  # not used (set in admin panel)
 admin.site.site_url = None  # not used (set in admin panel)
 

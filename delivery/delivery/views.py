@@ -1,44 +1,43 @@
 # from django.shortcuts import render
-import traceback
-import datetime
-import re
-import os
 import dataclasses
-from urllib.parse import urlencode
-from typing import Dict
+import datetime
+import os
+import re
+import traceback
 from distutils.util import strtobool
+from typing import Dict
+from urllib.parse import urlencode
+
 from dateutil.parser import parse
-from django.views.generic.detail import DetailView
 from django.conf import settings
+from django.contrib.admin import SimpleListFilter
+from django.contrib.admin import site as admin_site
 from django.contrib.admin.views.main import ChangeList
-from django.contrib.admin import SimpleListFilter, site as admin_site
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator
+from django.db.models.functions import Upper
 from django.http import HttpResponse, HttpResponseNotFound
-from django.views.decorators.http import require_POST
 from django.shortcuts import render
 from django.template.defaulttags import register
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.decorators import login_required
 from django.template.response import TemplateResponse
-from django.core.paginator import Paginator
 from django.urls import reverse
-from django.utils.safestring import mark_safe
 from django.utils.encoding import force_str
-from django.db.models.functions import Upper
+from django.utils.safestring import mark_safe
+from django.views.decorators.http import require_POST
+from django.views.generic.detail import DetailView
 
-
-from .models import Shift, Delivery
 from .actions import (
     create_onfleet_task_from_order,
     create_onfleet_tasks_from_shift,
     get_onfleet_trucks,
     search_clover_orders,
 )
-from .shopify import (
-    get_data_by_time_range as get_shopify_data_by_time_range,
-    ShopifyOrderInfo,
-)
-from .clover import search_clover_by_dates, parse_shopify_order_number
 from .admin import DeliveryAdmin
+from .clover import parse_shopify_order_number, search_clover_by_dates
+from .models import Delivery, Shift
+from .shopify import ShopifyOrderInfo
+from .shopify import get_data_by_time_range as get_shopify_data_by_time_range
 
 
 @register.filter(name="lookup")
@@ -62,7 +61,7 @@ def CreateOnfleetOrderView(request, pk):
     try:
         order = Delivery.objects.get(pk=pk)
     except Delivery.DoesNotExist:
-        raise HttpResponseNotFound("Not Found")
+        raise HttpResponseNotFound("Not Found")  # pylint: disable=raising-non-exception
     try:
         create_onfleet_task_from_order(order)
     except Exception as exc:
@@ -76,7 +75,7 @@ def CreateOnfleetShiftView(request, pk):
     try:
         shift = Shift.objects.get(pk=pk)
     except Shift.DoesNotExist:
-        raise HttpResponseNotFound("Not Found")
+        raise HttpResponseNotFound("Not Found")  # pylint: disable=raising-non-exception
     try:
         create_onfleet_tasks_from_shift(shift)
     except Exception as exc:

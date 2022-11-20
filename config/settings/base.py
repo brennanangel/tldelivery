@@ -38,7 +38,7 @@ USE_TZ = True
 LOCALE_PATHS = [str(ROOT_DIR / "locale")]
 
 # We don't need BigAutoField so let's skip the migration when we upgrade to 4.x
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # DATABASES
 # ------------------------------------------------------------------------------

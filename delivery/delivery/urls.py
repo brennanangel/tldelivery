@@ -1,14 +1,14 @@
-from django.urls import path
 from django.contrib import admin
+from django.urls import path
 
 from .views import (
-    WalkDetailView,
-    OrderDetailView,
     CreateOnfleetOrderView,
     CreateOnfleetShiftView,
-    OnfleetTruckView,
-    ShopifyReconciliationView,
     NewOrderView,
+    OnfleetTruckView,
+    OrderDetailView,
+    ShopifyReconciliationView,
+    WalkDetailView,
 )
 
 urlpatterns = [

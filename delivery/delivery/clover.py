@@ -1,10 +1,12 @@
 import datetime
-from os import path
 import re
-from typing import Sequence, Optional, Union, Dict
+from os import path
+from typing import Dict, Optional, Sequence, Union
+
 import requests
 from django.conf import settings
 from django.core.cache import cache
+
 from delivery.delivery.constants import DELIVERY_TYPE_COSTS, DeliveryTypes
 
 

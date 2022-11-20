@@ -1,25 +1,24 @@
 import datetime
 import json
 from os import path
-from typing import Set, Union, Sequence, Optional, List, Dict
+from typing import Dict, List, Optional, Sequence, Set
+
 import requests
 from django.conf import settings
 from django.db.models.functions import Upper
 
 from delivery.utils.typing import none_throws
 
-from .models import Delivery
 from .clover import (
-    search_clover_by_dates,
     get_delivery_type,
-    request_clover_customer_list,
     parse_shopify_order_number,
+    request_clover_customer_list,
+    search_clover_by_dates,
 )
-from .shopify import (
-    ShopifyOrderInfo,
-    get_data_from_shopify_by_name,
-    get_data_by_time_range as get_shopify_data_by_time_range,
-)
+from .models import Delivery
+from .shopify import ShopifyOrderInfo
+from .shopify import get_data_by_time_range as get_shopify_data_by_time_range
+from .shopify import get_data_from_shopify_by_name
 
 
 def create_onfleet_task_from_order(obj):
