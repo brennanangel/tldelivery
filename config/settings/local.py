@@ -63,10 +63,10 @@ INSTALLED_APPS += ["django_extensions"]  # noqa F405
 # Your stuff...
 # ------------------------------------------------------------------------------
 
-LOGGING["loggers"] = {
-    "django.db.backends": {
-        "level": "DEBUG",
-        "handlers": ["console"],
+if env("DJANGO_LOG_DB_QUERIES", default=False):
+    LOGGING["loggers"] = {
+        "django.db.backends": {
+            "level": "DEBUG",
+            "handlers": ["console"],
+        }
     }
-}
-
