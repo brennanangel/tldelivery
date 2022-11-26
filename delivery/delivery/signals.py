@@ -5,10 +5,10 @@ from .models import Delivery, Shift
 
 
 @receiver(post_save, sender=Delivery)
-def handle_delivery_save(_sender, _instance, _created, **kwargs):
+def handle_delivery_save(*args, **kwargs):
     Shift.bust_available_shift_cache()
 
 
 @receiver(post_delete, sender=Delivery)
-def handle_delivery_delete(_sender, _instance, **kwargs):
+def handle_delivery_delete(*args, **kwargs):
     Shift.bust_available_shift_cache()
