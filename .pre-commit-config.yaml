@@ -20,15 +20,6 @@ repos:
     hooks:
       - id: isort
 
-  - repo: local
-    hooks:
-      - id: pylint
-        name: pylint
-        entry: pylint
-        language: system
-        types: [python]
-        args: ["--fail-under=9"]
-
 # sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
 ci:
   autoupdate_schedule: weekly
