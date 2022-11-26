@@ -250,6 +250,8 @@ class Delivery(models.Model):
 
     @property
     def recipient_phone_number_formatted(self):
+        if self.recipient_phone_number is None:
+            return self.recipient_phone_number
         return phonenumbers.format_number(
             self.recipient_phone_number, phonenumbers.PhoneNumberFormat.NATIONAL
         )
