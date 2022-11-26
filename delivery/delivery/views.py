@@ -1,26 +1,32 @@
 # from django.shortcuts import render
-import traceback
+import dataclasses
 import datetime
+import os
 import re
+import traceback
 from distutils.util import strtobool
+from typing import Dict
+from urllib.parse import urlencode
+
 from dateutil.parser import parse
-from django.core.cache import cache
-from django.views.generic.detail import DetailView
+from django.conf import settings
+from django.contrib.admin import SimpleListFilter
+from django.contrib.admin import site as admin_site
 from django.contrib.admin.views.main import ChangeList
-from django.contrib.admin import SimpleListFilter, site as admin_site
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator
+from django.db.models.functions import Upper
 from django.http import HttpResponse, HttpResponseNotFound
-from django.views.decorators.http import require_POST
 from django.shortcuts import render
 from django.template.defaulttags import register
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.decorators import login_required
 from django.template.response import TemplateResponse
-from django.core.paginator import Paginator
 from django.urls import reverse
-from django.utils.html import mark_safe
-from django.db.models import Count
+from django.utils.encoding import force_str
+from django.utils.safestring import mark_safe
+from django.views.decorators.http import require_POST
+from django.views.generic.detail import DetailView
 
-from .models import Shift, Delivery
 from .actions import (
     create_onfleet_task_from_order,
     create_onfleet_tasks_from_shift,
@@ -28,6 +34,10 @@ from .actions import (
     search_clover_orders,
 )
 from .admin import DeliveryAdmin
+from .clover import parse_shopify_order_number, search_clover_by_dates
+from .models import Delivery, Shift
+from .shopify import ShopifyOrderInfo
+from .shopify import get_data_by_time_range as get_shopify_data_by_time_range
 
 
 @register.filter(name="lookup")
@@ -51,7 +61,7 @@ def CreateOnfleetOrderView(request, pk):
     try:
         order = Delivery.objects.get(pk=pk)
     except Delivery.DoesNotExist:
-        raise HttpResponseNotFound("Not Found")
+        raise HttpResponseNotFound("Not Found")  # pylint: disable=raising-non-exception
     try:
         create_onfleet_task_from_order(order)
     except Exception as exc:
@@ -65,7 +75,7 @@ def CreateOnfleetShiftView(request, pk):
     try:
         shift = Shift.objects.get(pk=pk)
     except Shift.DoesNotExist:
-        raise HttpResponseNotFound("Not Found")
+        raise HttpResponseNotFound("Not Found")  # pylint: disable=raising-non-exception
     try:
         create_onfleet_tasks_from_shift(shift)
     except Exception as exc:
@@ -85,16 +95,82 @@ def OnfleetTruckView(request):
     return render(
         request,
         "delivery/trucks.html",
-        {"teams": teams, "workers": workers, "tasks": tasks,},
+        {
+            "teams": teams,
+            "workers": workers,
+            "tasks": tasks,
+        },
+    )
+
+
+@login_required
+def ShopifyReconciliationView(request):
+    START_DATE = datetime.date(2021, 11, 17)
+
+    def _is_existing(o: ShopifyOrderInfo) -> bool:
+        try:
+            Delivery.objects.get(online_id=o.online_id)
+            return True
+        except Delivery.DoesNotExist:
+            pass
+        try:
+            Delivery.objects.get(
+                recipient_first_name=o.first_name.strip() if o.first_name else None,
+                recipient_last_name=o.last_name.strip() if o.last_name else None,
+                delivery_shift_id=o.shift.id if o.shift else None,
+            )
+            return True
+        except Delivery.DoesNotExist:
+            pass
+        return False
+
+    # get from Shopify
+    orders = get_shopify_data_by_time_range(START_DATE, delivery_only=True)
+    missing_orders = [dataclasses.asdict(o) for o in orders if not _is_existing(o)]
+
+    # match to Clover
+    clover_orders = search_clover_by_dates(
+        START_DATE, end_date=datetime.date(2021, 12, 17)
+    )
+    map_by_name = {}
+    for o in clover_orders:
+        shopify_name = parse_shopify_order_number(o)
+        if shopify_name is None:
+            continue
+        map_by_name[shopify_name] = o
+
+    order_numbers = []
+    for o in missing_orders:
+        if o["name"] in map_by_name:
+            o["clover_id"] = map_by_name[o["name"]]["id"]
+            order_numbers.append(o["clover_id"])
+    scheduled_orders = Delivery.objects.annotate(
+        clover_id=Upper("order_number")
+    ).filter(clover_id__in=order_numbers)
+    scheduled_orders_dict = {o.clover_id: o for o in scheduled_orders}
+    for o in missing_orders:
+        if "clover_id" in o and o["clover_id"] in scheduled_orders_dict:
+            o["id"] = scheduled_orders_dict[o["clover_id"]]["id"]
+
+    # report missing
+    return render(
+        request,
+        "delivery/shopify.html",
+        {
+            "orders": missing_orders,
+            "shopify_orders_url": os.path.join(
+                settings.SHOPIFY_APP_URL, "admin", "orders"
+            ),
+        },
     )
 
 
 class NewOrderChangeList(ChangeList):
     def get_results(self, request):
         params = self.get_filters_params()
-        include_processed = strtobool(params.get("include_processed", False))
+        include_processed = strtobool(params.get("include_processed", "False"))
         try:
-            start_date = parse(params.get("date", ""))
+            start_date = parse(params.get("date", "")).date()
         except ValueError:
             start_date = datetime.date.today()
         result_list = search_clover_orders(
@@ -121,6 +197,17 @@ class NewOrderProcessedFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         return queryset
+
+    def choices(self, changelist):
+        # remove first "All" option
+        for lookup, title in self.lookup_choices:
+            yield {
+                "selected": self.value() == force_str(lookup),
+                "query_string": changelist.get_query_string(
+                    {self.parameter_name: lookup}, []
+                ),
+                "display": title,
+            }
 
 
 class SingleDateFilter:
@@ -155,34 +242,45 @@ class SingleDateFilter:
 
 
 class NewOrderAdmin(DeliveryAdmin):
-    list_editable = (
+    list_editable = [
         "delivery_shift",
         "order_number",
-    )
-    list_display = (
+        "delivery_type",
+        "online_id",
+        "recipient_phone_number",
+    ]
+    list_display = [
         "created_at",
         "order_number",
         "recipient_name",
+        "recipient_phone_number_formatted",
+        "online_order_link",
         "delivery_shift",
         "action",
-    )
-    list_filter = (
+        "recipient_phone_number",
+        "online_id",
+    ]
+    list_filter = [
         NewOrderProcessedFilter,
         SingleDateFilter,
-    )
-    search_fields = ("order_number", "recipient_last_name")
+    ]
+    search_fields = ["order_number", "recipient_last_name"]
     empty_value_display = " - "
 
     class Media:
         js = [
             "admin/js/calendar.js",
-            "admin/js/admin/DateTimeShortcuts.js",
+            "admin/js/SelectBox.js",
+            "js/FilterDateTimeShortcuts.js",
         ]
+        css = {
+            "all": ["css/new_order_admin_hide_columns.css"],
+        }
 
     def action(self, obj):
-        classes = ["btn"]
+        classes = ["button"]
         target = "_blank"
-        popup = True
+        popup = False
         if popup:
             classes.append("related-widget-wrapper-link")
 
@@ -194,12 +292,16 @@ class NewOrderAdmin(DeliveryAdmin):
             )
         else:
             text = "Save As"
-            classes.append("btn-primary")
-            url = (
-                f'{reverse(f"admin:{self.model._meta.app_label}_{self.model._meta.model_name}_add")}'
-                f"?order_number={obj.order_number}"
-                f'{"&_popup=1" if popup else ""}'
-            )
+            params = {"order_number": obj.order_number}
+            if popup:
+                params["popup"] = 1
+            if obj.delivery_shift_id:
+                params["delivery_shift"] = obj.delivery_shift_id
+            if obj.online_id:
+                params["online_id"] = obj.online_id
+            if obj.recipient_phone_number:
+                params["recipient_phone_number"] = obj.recipient_phone_number
+            url = f'{reverse(f"admin:{self.model._meta.app_label}_{self.model._meta.model_name}_add")}?{urlencode(params)}'
 
         return mark_safe(
             "<a "
@@ -216,20 +318,12 @@ class NewOrderAdmin(DeliveryAdmin):
 def NewOrderView(request):
     model_admin = NewOrderAdmin(Delivery, admin_site)
 
-    shift_counts = Delivery.objects.values("delivery_shift_id").annotate(
-        Count("delivery_shift_id")
-    )
-    for shift_count in shift_counts:
-        cache.set(
-            Shift.FILLED_CACHE_TEMPLATE.format(id=shift_count["delivery_shift_id"]),
-            shift_count["delivery_shift_id__count"],
-        )
     FormSet = model_admin.get_changelist_formset(request)
 
     if request.method == "POST" and "_save" in request.POST:
         prefix = FormSet.get_default_prefix()
         num_forms = int(request.POST.get(f"{prefix}-TOTAL_FORMS", 0))
-        objects = {i: {} for i in range(num_forms)}
+        objects: Dict[int, Dict[str, str]] = {i: {} for i in range(num_forms)}
         pk_pattern = re.compile(
             r"{}-(?P<num>\d+)-(?P<field>\w+)$".format(
                 re.escape(FormSet.get_default_prefix())
@@ -249,10 +343,9 @@ def NewOrderView(request):
         for obj in objects.values():
             pk = obj["id"]
             order_number = obj["order_number"]
-            delivery_shift_id = obj["delivery_shift"]
-            if not delivery_shift_id or not order_number:
+            if not obj["delivery_shift"] or not order_number:
                 continue
-            delivery_shift_id = int(delivery_shift_id)
+            delivery_shift_id = obj["delivery_shift"]
             if pk:
                 delivery = existing_deliveries[int(pk)]
                 if (
@@ -262,12 +355,24 @@ def NewOrderView(request):
                     continue
                 delivery.order_number = order_number
                 delivery.delivery_shift_id = delivery_shift_id
-                print(delivery)
             else:
+                try:
+                    # check to see if processed by the time the button was hit
+                    Delivery.objects.get(order_number=order_number)
+                    continue
+                except Delivery.DoesNotExist:
+                    pass
+                recipient_phone_number = obj["recipient_phone_number"] or None
+                online_id = obj["online_id"] or None
                 delivery = Delivery(
-                    order_number=order_number, delivery_shift_id=delivery_shift_id
+                    order_number=order_number,
+                    delivery_shift_id=delivery_shift_id,
+                    recipient_phone_number=recipient_phone_number,
+                    online_id=online_id,
                 )
-                print(delivery)
+                delivery.save()
+                delivery.sync()
+            delivery.save()
 
     if "include_processed" not in request.GET:
         q = request.GET.copy()
@@ -293,6 +398,8 @@ def NewOrderView(request):
         200,  # list_max_show_all
         model_admin.list_editable,
         model_admin,
+        model_admin.sortable_by,
+        "Search for new orders",  # search help text
     )
 
     cl.formset = FormSet(  # pylint: disable=attribute-defined-outside-init
@@ -311,11 +418,22 @@ def NewOrderView(request):
                 f"form-{n}-delivery_shift": getattr(o, "delivery_shift_id", None)
                 for n, o in enumerate(cl.result_list)
             },
+            **{
+                f"form-{n}-recipient_phone_number": getattr(
+                    o, "recipient_phone_number", None
+                )
+                for n, o in enumerate(cl.result_list)
+            },
+            **{
+                f"form-{n}-online_id": getattr(o, "online_id", None)
+                for n, o in enumerate(cl.result_list)
+            },
         },
         auto_id="order_number",
     )
 
     context = {
+        **admin_site.each_context(request),
         "module_name": "Orders",
         "title": "New Orders",
         "is_popup": False,

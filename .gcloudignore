@@ -12,6 +12,7 @@
 # below:
 .git
 .gitignore
+.github
 
 # Python pycache:
 __pycache__/
@@ -281,6 +282,5 @@ Session.vim
 tags
 
 ### Project template
-delivery/media/
 
 .pytest_cache/

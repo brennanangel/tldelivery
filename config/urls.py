@@ -1,34 +1,34 @@
 from django.conf import settings
-from django.urls import include, path
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.views.generic import TemplateView
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.urls import include, path
 from django.views import defaults as default_views
+from django.views.generic import TemplateView
+
+admin.site.site_header = (
+    "Guardsmen Tree Lot Delivery Desk"  # not used (set in admin panel)
+)
+admin.site.site_title = "Scheduler"  # not used (set in admin panel)
+admin.site.site_url = None  # not used (set in admin panel)
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
     path(
-        "about/",
-        TemplateView.as_view(template_name="pages/about.html"),
-        name="about",
+        "about/", TemplateView.as_view(template_name="pages/about.html"), name="about"
     ),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
-    # url(r'^_nested_admin/', include('nested_admin.urls')),
     # User management
-    path(
-        "users/",
-        include("delivery.users.urls", namespace="users"),
-    ),
+    path("users/", include("delivery.users.urls", namespace="users")),
     # path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
-    path("delivery/", include('delivery.delivery.urls')),
-
-] + static(
-    settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
-)
-
+    path("delivery/", include("delivery.delivery.urls")),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 if settings.DEBUG:
+    # Static file serving when using Gunicorn + Uvicorn for local web socket development
+    urlpatterns += staticfiles_urlpatterns()
+
     # This allows the error pages to be debugged during development, just visit
     # these url in browser to see how these error pages look like.
     urlpatterns += [

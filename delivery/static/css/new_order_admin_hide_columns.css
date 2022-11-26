@@ -1,0 +1,6 @@
+.column-recipient_phone_number,
+.column-online_id,
+.field-recipient_phone_number,
+.field-online_id {
+  display: none;
+}

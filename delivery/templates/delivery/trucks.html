@@ -1,4 +1,4 @@
-{% load staticfiles i18n %}
+{% load static i18n %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -21,6 +21,9 @@
   </head>
 
   <body>
+    {% if not dict.vars %}
+      <h1>No Trucks found in OnFleet</h1>
+    {% endif %}
     {% for teamid, team in teams.items %}
     <div class="team">
       <h1 class="center no-print"><ul>{{ team.name }}</ul></h1>
@@ -63,6 +66,3 @@
     {% endfor %}
   </body>
 </html>
-
-
-

@@ -1,25 +1,22 @@
-import datetime
 import csv
+import datetime
 from typing import List
+
 from django.contrib import admin, messages
+from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
+from django.contrib.admin.utils import quote
+from django.db.models.query import QuerySet
+from django.forms import ModelForm
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 
-from django.core.cache import cache
-from django.http import HttpResponseRedirect, HttpResponse
-from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
-from django.forms import ModelForm
-from django.contrib.admin.utils import quote
-from django.db.models import Count
-
-from .models import (
-    Shift,
-    Delivery,
-    Item,
-)
 from .actions import create_onfleet_task_from_order
+from .models import Delivery, Item, Shift
 
 
-def export_as_csv(self, request, queryset) -> HttpResponse:
+def export_as_csv(
+    self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet
+) -> HttpResponse:
     meta = self.model._meta
     field_names = [field.name for field in meta.fields]
 
@@ -59,8 +56,8 @@ class ItemInline(admin.TabularInline):
 
 class DeliveryInline(admin.TabularInline):
     model = Delivery
-    fields = ("order_number", "recipient_name", "recipient_phone_number")
-    readonly_fields = ("recipient_name", "recipient_phone_number")
+    fields = ("order_number", "recipient_name", "recipient_phone_number_formatted")
+    readonly_fields = ("recipient_name", "recipient_phone_number_formatted")
     show_change_link = True
     extra = 0
 
@@ -79,7 +76,7 @@ class ShiftAdmin(admin.ModelAdmin):
         "date",
         "time",
     )
-    actions = [export_as_csv]
+    actions = [export_as_csv]  # type: ignore
 
     inlines = [DeliveryInline]
 
@@ -89,25 +86,14 @@ class ShiftAdmin(admin.ModelAdmin):
     def slots(self, obj):
         return obj.slots_display
 
-    def get_queryset(self, request):
-
-        shift_counts = Delivery.objects.values("delivery_shift_id").annotate(
-            Count("delivery_shift_id")
-        )
-        for shift_count in shift_counts:
-            cache.set(
-                Shift.FILLED_CACHE_TEMPLATE.format(id=shift_count["delivery_shift_id"]),
-                shift_count["delivery_shift_id__count"],
-            )
-
-        return super().get_queryset(request)
-
 
 class DeliveryForm(ModelForm):
     class Meta:
         model = Delivery
         exclude: List[str] = []
 
+    # comment this out because it's now applying to all validation on this field
+    """
     def __init__(self, *args, **kwargs):
         super(DeliveryForm, self).__init__(*args, **kwargs)
         qs = Shift.objects.filter(date__gte=datetime.date.today())
@@ -117,33 +103,39 @@ class DeliveryForm(ModelForm):
             qs = qs.union(Shift.objects.filter(pk=kwargs["instance"].delivery_shift_id))
 
         self.fields["delivery_shift"].queryset = qs.order_by("date", "time")
+    """
 
 
 class DeliveryAdmin(admin.ModelAdmin):
     form = DeliveryForm
-    list_display = (
+    # formfield_overrides = {
+    #    ForeignKey: {"widget": RelatedFieldWidgetWrapperNoEdit},
+    # }
+    list_display = [
         "order_number",
         "delivery_shift",
         "recipient_name",
-        "recipient_phone_number",
+        "recipient_phone_number_formatted",
+        "short_notes",
         "generate_delivery_sheet",
         "push_button",
-    )
-    list_filter = ("delivery_shift",)
+    ]
+    list_filter = ["delivery_shift"]
     search_fields = [
         "order_number",
         "recipient_last_name",
         "recipient_phone_number",
         "recipient_first_name",
     ]
-    readonly_fields = (
+    readonly_fields = [
         "sync_button",
         "generate_delivery_sheet",
         "push_button",
-    )
-    list_editable = ("delivery_shift",)
+        "online_order_link",
+    ]
+    list_editable = ["delivery_shift"]
     fieldsets = (
-        ("Main", {"fields": ("order_number", "delivery_shift")}),
+        ("Main", {"fields": ("delivery_shift", "order_number", "online_id")}),
         (
             "Actions",
             {"fields": ("sync_button", "generate_delivery_sheet", "push_button")},
@@ -163,6 +155,7 @@ class DeliveryAdmin(admin.ModelAdmin):
             "Address",
             {
                 "fields": (
+                    "delivery_type",
                     "address_name",
                     "address_line_1",
                     "address_line_2",
@@ -171,9 +164,14 @@ class DeliveryAdmin(admin.ModelAdmin):
                 )
             },
         ),
-        ("Other", {"fields": ("notes",)}),
+        (
+            "Other",
+            {"fields": ("notes", "online_order_link")},
+        ),
     )
-    actions = [export_as_csv]
+    actions = [export_as_csv]  # type: ignore
+    actions_on_top = True
+    save_on_top = True
     inlines = [ItemInline]
 
     def response_change(self, request, obj):
@@ -245,34 +243,16 @@ class DeliveryAdmin(admin.ModelAdmin):
                 return HttpResponseRedirect(redirect_url)
         return super().add_view(request, form_url, extra_context)
 
-    def get_queryset(self, request):
-        shift_counts = Delivery.objects.values("delivery_shift_id").annotate(
-            Count("delivery_shift_id")
-        )
-        for shift_count in shift_counts:
-            cache.set(
-                Shift.FILLED_CACHE_TEMPLATE.format(id=shift_count["delivery_shift_id"]),
-                shift_count["delivery_shift_id__count"],
-            )
-
-        return super().get_queryset(request)
-
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
         if db_field.name == "delivery_shift":
-            shift_counts = Delivery.objects.values("delivery_shift_id").annotate(
-                Count("delivery_shift_id")
-            )
-            for shift_count in shift_counts:
-                cache.set(
-                    Shift.FILLED_CACHE_TEMPLATE.format(
-                        id=shift_count["delivery_shift_id"]
-                    ),
-                    shift_count["delivery_shift_id__count"],
-                )
 
-            # dirty trick so queryset is evaluated and cached in .choices
-            formfield.choices = formfield.choices
+            # hack so queryset is evaluated and cached in .choices
+            formfield.choices = formfield.choices  # type: ignore
+            # hack so we don't show shift edit buttons on the shift selector widget
+            formfield.widget.can_add_related = False  # type: ignore
+            formfield.widget.can_delete_related = False  # type: ignore
+            formfield.widget.can_change_related = False  # type: ignore
         return formfield
 
 

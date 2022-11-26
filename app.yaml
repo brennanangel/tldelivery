@@ -1,19 +1,21 @@
 # [START django_app]
-runtime: python37
+runtime: python39
 
 handlers:
-# This configures Google App Engine to serve the files in the app's static
-# directory.
-- url: /static
-  static_dir: staticfiles/
+  # This configures Google App Engine to serve the files in the app's static
+  # directory.
+  - url: /static
+    static_dir: staticfiles/
 
-# This handler routes all requests not caught above to your main app. It is
-# required when static routes are defined, but can be omitted (along with
-# the entire handlers section) when there are no static files defined.
-- url: /.*
-  script: auto
+  # This handler routes all requests not caught above to your main app. It is
+  # required when static routes are defined, but can be omitted (along with
+  # the entire handlers section) when there are no static files defined.
+  - url: /.*
+    script: auto
 
 env_variables:
-  DJANGO_READ_DOT_ENV_FILE: "True"
+  DJANGO_READ_DOT_ENV_FILE: "False"
 
-  # [END django_app]
+includes:
+  - env.yaml
+# [END django_app]

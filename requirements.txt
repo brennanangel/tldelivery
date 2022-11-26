@@ -1,1 +1,1 @@
--r requirements/gae.txt
+-r requirements/production.txt

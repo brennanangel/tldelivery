@@ -1,0 +1,55 @@
+{% if orders %}
+<h1>Unprocessed Orders</h1>
+<h3>
+  Orders that exist in Shopify without a matching order in the scheduling tool
+</h3>
+<table>
+  <thead>
+    <th>Created Time</th>
+    <th>Customer</th>
+    <th>Recipient</th>
+    <th>Phone Number</th>
+    <th>Shift</th>
+    <th>Shopify ID</th>
+    <th>Shopify Link</th>
+    <th>Clover ID</th>
+    <th>Action</th>
+  </thead>
+  <tbody>
+    {% for order in orders %}
+    <tr>
+      <td>{{order.created_at}}</td>
+      <td>{{order.customer_first_name}} {{order.customer_last_name}}</td>
+      <td>{{order.first_name}} {{order.last_name}}</td>
+      <td>{{order.phone}}</td>
+      <td>{{order.shift}}</td>
+      <td>{{order.online_id}}</td>
+      <td>
+        <a href="{{shopify_orders_url}}/{{order.online_id}}" target="_blank"
+          >link</a
+        >
+      </td>
+      <td>{{order.clover_id}}</td>
+      <td>
+        {% if order.id %}
+        <a
+          target="_blank"
+          href="{%url 'admin:delivery_delivery_edit' order.id %}"
+          >Edit</a
+        >
+        {% else %}
+        <a
+          target="_blank"
+          href="{%url 'admin:delivery_delivery_add'%}?order_number={{order.clover_id}}&delivery_shift={{order.shift.id}}&online_id={{order.online_id}}&recipient_phone_number={{order.phone}}"
+          >Create</a
+        >
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% else %}
+<h1>All Shopify orders processed</h1>
+{% endif %}
