@@ -158,7 +158,7 @@ from delivery.delivery.shopify import (
     parse_order_info_from_data as parse_shopify_order_info_from_data,
 )
 
-DUPLICATE_PHONE_MESSAGE = "Phone numbers must be unqiue, or it will be a problem for Onfleet. If you have two legitimate deliveries with the same phone number, the easiest workaround is to set one of them to a random number such as 201-111-1111 and put the real number in the notes."
+DUPLICATE_PHONE_MESSAGE = "Phone numbers must be unique, or it will be a problem for Onfleet. If you have two legitimate deliveries with the same phone number, the easiest workaround is to set one of them to a random number such as 201-111-1111 and put the real number in the notes."
 
 
 class Delivery(models.Model):
